@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "446825630132",
+    "project_id": "autotaller-de36c",
+    "storage_bucket": "autotaller-de36c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:446825630132:android:a11557d617869e77fecae1",
+        "android_client_info": {
+          "package_name": "com.example.autotallerapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "446825630132-dp5ri2phb9i8pqj85bre137ju5r0p12u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.autotallerapp",
+            "certificate_hash": "4f87c5a4400ba454a0c899b7cc8dc4eb85f0a5e8"
+          }
+        },
+        {
+          "client_id": "446825630132-5u0n8ss7je62r4tob7lrfnvojhjuadoe.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAB2DsBG4krd2bTMTRLUws6npSKYlJ4Lfg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "446825630132-5u0n8ss7je62r4tob7lrfnvojhjuadoe.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
