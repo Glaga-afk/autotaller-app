@@ -12,6 +12,13 @@ import com.example.autotallerapp.ui.screens.placeholder.ModuloPendienteScreen
 import com.example.autotallerapp.ui.screens.recuperar.RecuperarScreen
 import com.example.autotallerapp.ui.screens.registro.RegistroScreen
 import com.example.autotallerapp.ui.screens.splash.SplashScreen
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.example.autotallerapp.ui.screens.automovil.RegistroAutomovilScreen
+import com.example.autotallerapp.ui.screens.escaner.EscanerPlacaScreen
+import com.example.autotallerapp.ui.screens.automovil.ListaAutomovilesScreen
 
 @Composable
 fun NavegacionAutoTaller(navController: NavHostController = rememberNavController()) {
@@ -56,6 +63,47 @@ fun NavegacionAutoTaller(navController: NavHostController = rememberNavControlle
             InicioScreen(
                 irALogin = { navController.reemplazarPor(Rutas.LOGIN) },
                 irAModulo = { ruta -> navController.navigate(ruta) }
+            )
+        }
+
+        //Automovil
+        composable(
+            route = Rutas.NUEVO_AUTOMOVIL,
+            arguments = listOf(navArgument("clienteId") { type = NavType.StringType })
+        ) { entrada ->
+            val clienteId = entrada.arguments?.getString("clienteId").orEmpty()
+            val placaEscaneada by entrada.savedStateHandle
+                .getStateFlow<String?>("placa_escaneada", null)
+                .collectAsState()
+
+            RegistroAutomovilScreen(
+                clienteId = clienteId,
+                placaEscaneada = placaEscaneada,
+                volver = { navController.popBackStack() },
+                irAEscanerPlaca = { navController.navigate(Rutas.ESCANER_PLACA) },
+                alRegistrar = { navController.popBackStack() }
+            )
+        }
+
+        composable(Rutas.ESCANER_PLACA) {
+            EscanerPlacaScreen(
+                volver = { navController.popBackStack() },
+                alDetectarPlaca = { placa ->
+                    navController.previousBackStackEntry?.savedStateHandle?.set("placa_escaneada", placa)
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Rutas.AUTOMOVILES_CLIENTE,
+            arguments = listOf(navArgument("clienteId") { type = NavType.StringType })
+        ) { entrada ->
+            val clienteId = entrada.arguments?.getString("clienteId").orEmpty()
+
+            ListaAutomovilesScreen(
+                volver = { navController.popBackStack() },
+                irANuevoAutomovil = { navController.navigate(Rutas.rutaNuevoAutomovil(clienteId)) }
             )
         }
 

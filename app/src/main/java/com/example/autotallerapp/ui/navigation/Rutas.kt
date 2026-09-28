@@ -20,4 +20,15 @@ object Rutas {
     const val INDICADORES = "indicadores"
     const val CATALOGOS = "catalogos"
     const val PERFIL = "perfil"
+
+    //Automovil
+    const val NUEVO_AUTOMOVIL = "nuevo_automovil/{clienteId}"
+    const val ESCANER_PLACA = "escaner_placa"
+
+    fun rutaNuevoAutomovil(clienteId: String) = "nuevo_automovil/$clienteId"
+
+    //Automovil-Cliente
+    const val AUTOMOVILES_CLIENTE = "automoviles_cliente/{clienteId}"
+
+    fun rutaAutomovilesCliente(clienteId: String) = "automoviles_cliente/$clienteId"
 }
