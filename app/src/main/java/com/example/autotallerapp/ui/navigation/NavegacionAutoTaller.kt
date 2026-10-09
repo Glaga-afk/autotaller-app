@@ -19,6 +19,7 @@ import androidx.navigation.navArgument
 import com.example.autotallerapp.ui.screens.automovil.RegistroAutomovilScreen
 import com.example.autotallerapp.ui.screens.escaner.EscanerPlacaScreen
 import com.example.autotallerapp.ui.screens.automovil.ListaAutomovilesScreen
+import com.example.autotallerapp.ui.screens.bitacora.BitacoraScreen
 
 @Composable
 fun NavegacionAutoTaller(navController: NavHostController = rememberNavController()) {
@@ -63,6 +64,12 @@ fun NavegacionAutoTaller(navController: NavHostController = rememberNavControlle
             InicioScreen(
                 irALogin = { navController.reemplazarPor(Rutas.LOGIN) },
                 irAModulo = { ruta -> navController.navigate(ruta) }
+            )
+        }
+
+        composable(Rutas.BITACORA) {
+            BitacoraScreen(
+                volver = { navController.popBackStack() }
             )
         }
 
@@ -124,7 +131,7 @@ private fun androidx.navigation.NavGraphBuilder.modulosPendientes(nav: NavHostCo
         Rutas.AUTOMOVILES to "Automoviles",
         Rutas.ORDENES to "Ordenes de servicio",
         Rutas.NUEVA_ORDEN to "Nueva OST",
-        Rutas.BITACORA to "Bitacora de problemas",
+        // Rutas.BITACORA to "Bitacora de problemas"
         Rutas.TECNICOS to "Tecnicos",
         Rutas.DIAGNOSTICO_IA to "Diagnostico con IA",
         Rutas.ASISTENTE_IA to "Asistente tecnico",
