@@ -54,10 +54,13 @@ import java.util.concurrent.Executors
 import androidx.compose.material3.Surface
 import com.example.autotallerapp.ui.components.BotonPrincipal
 import android.os.SystemClock
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.layout.onSizeChanged
 import kotlinx.coroutines.delay
 import com.example.autotallerapp.ui.ocr.EstabilizadorPlaca
+import com.example.autotallerapp.ui.ocr.RegionGuiaPlaca
 import com.example.autotallerapp.ui.theme.VerdeExito
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -114,6 +117,7 @@ fun EscanerPlacaScreen(
                         estabilizador.registrar(placa, SystemClock.elapsedRealtime())
                     }
                 })
+                TextoInstruccion(modifier = Modifier.align(Alignment.TopCenter))
                 MarcoGuiaPlaca(
                     confirmada = placaConfirmada != null,
                     modifier = Modifier.align(Alignment.Center)
@@ -149,9 +153,14 @@ private fun VisorCamara(alDetectarPlaca: (String) -> Unit) {
     val cicloDeVida = LocalLifecycleOwner.current
     val ejecutorAnalisis = remember { Executors.newSingleThreadExecutor() }
     val callbackActualizado = rememberUpdatedState(alDetectarPlaca)
+    val analizador = remember {
+        EscanerPlacaAnalyzer { placa -> callbackActualizado.value(placa) }
+    }
 
     AndroidView(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .onSizeChanged { analizador.actualizarTamanoVista(it.width, it.height) },
         factory = { ctx ->
             val vistaPrevisualizacion = PreviewView(ctx).apply {
                 implementationMode = PreviewView.ImplementationMode.COMPATIBLE
@@ -162,11 +171,18 @@ private fun VisorCamara(alDetectarPlaca: (String) -> Unit) {
             proveedorCamaraFuturo.addListener({
                 val proveedorCamara = proveedorCamaraFuturo.get()
 
-                val preview = Preview.Builder().build().also {
-                    it.setSurfaceProvider(vistaPrevisualizacion.surfaceProvider)
-                }
+                // Preview y analisis en 4:3 para que el recuadro caiga en el mismo lugar de ambos
+                val selectorPreview = ResolutionSelector.Builder()
+                    .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
+                    .build()
 
-                val resolucionAnalisis = ResolutionSelector.Builder()
+                val preview = Preview.Builder()
+                    .setResolutionSelector(selectorPreview)
+                    .build()
+                    .also { it.setSurfaceProvider(vistaPrevisualizacion.surfaceProvider) }
+
+                val selectorAnalisis = ResolutionSelector.Builder()
+                    .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
                     .setResolutionStrategy(
                         ResolutionStrategy(
                             Size(1280, 960),
@@ -176,15 +192,10 @@ private fun VisorCamara(alDetectarPlaca: (String) -> Unit) {
                     .build()
 
                 val analisisImagen = ImageAnalysis.Builder()
-                    .setResolutionSelector(resolucionAnalisis)
+                    .setResolutionSelector(selectorAnalisis)
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
-                    .also {
-                        it.setAnalyzer(
-                            ejecutorAnalisis,
-                            EscanerPlacaAnalyzer { placa -> callbackActualizado.value(placa) }
-                        )
-                    }
+                    .also { it.setAnalyzer(ejecutorAnalisis, analizador) }
 
                 try {
                     proveedorCamara.unbindAll()
@@ -210,22 +221,31 @@ private fun VisorCamara(alDetectarPlaca: (String) -> Unit) {
 
 @Composable
 private fun MarcoGuiaPlaca(confirmada: Boolean, modifier: Modifier = Modifier) {
-    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(0.85f)
-                .aspectRatio(3f)
-                .border(
-                    width = 3.dp,
-                    color = if (confirmada) VerdeExito else MaterialTheme.colorScheme.primary,
-                    shape = RoundedCornerShape(12.dp)
-                )
-        )
-        Spacer(Modifier.height(12.dp))
+    Box(
+        modifier = modifier
+            .fillMaxWidth(RegionGuiaPlaca.ANCHO_FRACCION)
+            .aspectRatio(RegionGuiaPlaca.RELACION_ASPECTO)
+            .border(
+                width = 3.dp,
+                color = if (confirmada) VerdeExito else MaterialTheme.colorScheme.primary,
+                shape = RoundedCornerShape(12.dp)
+            )
+    )
+}
+
+@Composable
+private fun TextoInstruccion(modifier: Modifier = Modifier) {
+    Surface(
+        color = Color.Black.copy(alpha = 0.55f),
+        shape = RoundedCornerShape(12.dp),
+        modifier = modifier.padding(top = 20.dp, start = 24.dp, end = 24.dp)
+    ) {
         Text(
-            "Coloca la placa en el recuadro y mantenla 2 segundos",
+            "Coloca la placa dentro del recuadro y mantenla 2 segundos",
             color = Color.White,
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
         )
     }
 }
