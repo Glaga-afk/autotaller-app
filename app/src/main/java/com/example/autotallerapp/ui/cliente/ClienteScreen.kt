@@ -6,6 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
@@ -21,6 +22,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun ClienteScreen(
     viewModel: ClienteViewModel = hiltViewModel(),
+    onVolver: () -> Unit = {},
     onClienteConfirmado: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -42,7 +44,15 @@ fun ClienteScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Gestión de Clientes — HU02") },
+                title = { Text("Gestión de Clientes") },
+                navigationIcon = {
+                    IconButton(onClick = onVolver) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Volver atrás"
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
@@ -188,23 +198,49 @@ fun ClienteScreen(
                     }
                     is ClienteUiState.RegistroExitoso -> {
                         Card(
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                            ),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(
                                 modifier = Modifier.padding(16.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(48.dp))
-                                Text("¡Cliente registrado con éxito!", style = MaterialTheme.typography.titleMedium)
-                                Button(onClick = {
-                                    viewModel.limpiarEstado()
-                                    dniQuery = ""
-                                    nombreInput = ""
-                                    direccionInput = ""
-                                    telefonoInput = ""
-                                }) {
+                                Icon(
+                                    Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp)
+                                )
+
+                                Text(
+                                    "¡Cliente registrado con éxito!",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+
+                                Text("DNI: ${state.dni}")
+
+                                Button(
+                                    onClick = {
+                                        onClienteConfirmado(state.dni)
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text("Continuar con este cliente")
+                                }
+
+                                OutlinedButton(
+                                    onClick = {
+                                        viewModel.limpiarEstado()
+                                        dniQuery = ""
+                                        nombreInput = ""
+                                        direccionInput = ""
+                                        telefonoInput = ""
+                                        sexoInput = "Masculino"
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
                                     Text("Realizar otra consulta")
                                 }
                             }

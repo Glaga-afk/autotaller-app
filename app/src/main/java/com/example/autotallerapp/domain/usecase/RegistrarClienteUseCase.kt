@@ -8,16 +8,50 @@ class RegistrarClienteUseCase @Inject constructor(
     private val repository: ClienteRepository
 ) {
     suspend operator fun invoke(cliente: Cliente): Result<Unit> {
-        if (cliente.dni.trim().length != 8 || !cliente.dni.all { it.isDigit() }) {
-            return Result.failure(IllegalArgumentException("El DNI debe ser de 8 dígitos."))
+        val dni = cliente.dni.trim()
+
+        if (dni.length != 8 || !dni.all { it.isDigit() }) {
+            return Result.failure(
+                IllegalArgumentException("El DNI debe contener exactamente 8 dígitos numéricos.")
+            )
         }
-        if (cliente.nombreCompleto.isBlank() || cliente.direccion.isBlank() || cliente.telefono.isBlank()) {
-            return Result.failure(IllegalArgumentException("Todos los campos son obligatorios."))
+
+        val clienteLimpio = cliente.copy(
+            dni = dni,
+            nombreCompleto = cliente.nombreCompleto.trim(),
+            direccion = cliente.direccion.trim(),
+            sexo = cliente.sexo.trim(),
+            telefono = cliente.telefono.trim()
+        )
+
+        if (
+            clienteLimpio.nombreCompleto.isBlank() ||
+            clienteLimpio.direccion.isBlank() ||
+            clienteLimpio.sexo.isBlank() ||
+            clienteLimpio.telefono.isBlank()
+        ) {
+            return Result.failure(
+                IllegalArgumentException("Todos los campos son obligatorios.")
+            )
         }
-        val existe = repository.buscarClientePorDni(cliente.dni)
-        if (existe.isSuccess && existe.getOrNull() != null) {
-            return Result.failure(IllegalStateException("El cliente con DNI ${cliente.dni} ya se encuentra registrado."))
+
+        val consulta = repository.buscarClientePorDni(dni)
+
+        if (consulta.isFailure) {
+            return Result.failure(
+                consulta.exceptionOrNull()
+                    ?: Exception("No se pudo verificar el DNI.")
+            )
         }
-        return repository.registrarCliente(cliente)
+
+        if (consulta.getOrNull() != null) {
+            return Result.failure(
+                IllegalStateException(
+                    "El cliente con DNI $dni ya se encuentra registrado."
+                )
+            )
+        }
+
+        return repository.registrarCliente(clienteLimpio)
     }
 }

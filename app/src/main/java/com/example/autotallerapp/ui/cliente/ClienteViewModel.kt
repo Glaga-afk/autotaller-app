@@ -43,9 +43,13 @@ class ClienteViewModel @Inject constructor(
             val nuevoCliente = Cliente(dni.trim(), nombre.trim(), direccion.trim(), sexo, telefono.trim())
             val result = registrarClienteUseCase(nuevoCliente)
             result.onSuccess {
-                _uiState.value = ClienteUiState.RegistroExitoso
+                _uiState.value = ClienteUiState.RegistroExitoso(
+                    nuevoCliente.dni
+                )
             }.onFailure { error ->
-                _uiState.value = ClienteUiState.Error(error.message ?: "Error al registrar")
+                _uiState.value = ClienteUiState.Error(
+                    error.message ?: "Error al registrar"
+                )
             }
         }
     }
