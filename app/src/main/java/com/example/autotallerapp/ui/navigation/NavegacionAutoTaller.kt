@@ -20,6 +20,7 @@ import com.example.autotallerapp.ui.screens.automovil.RegistroAutomovilScreen
 import com.example.autotallerapp.ui.screens.escaner.EscanerPlacaScreen
 import com.example.autotallerapp.ui.screens.automovil.ListaAutomovilesScreen
 import com.example.autotallerapp.ui.screens.bitacora.BitacoraScreen
+import com.example.autotallerapp.ui.cliente.ClienteScreen
 
 @Composable
 fun NavegacionAutoTaller(navController: NavHostController = rememberNavController()) {
@@ -70,6 +71,15 @@ fun NavegacionAutoTaller(navController: NavHostController = rememberNavControlle
         composable(Rutas.BITACORA) {
             BitacoraScreen(
                 volver = { navController.popBackStack() }
+            )
+        }
+
+        // Ruta real para la Gestión de Clientes (HU02)
+        composable(Rutas.CLIENTES) {
+            ClienteScreen(
+                onClienteConfirmado = { dniCliente ->
+                    navController.navigate(Rutas.rutaNuevoAutomovil(dniCliente))
+                }
             )
         }
 
@@ -127,11 +137,10 @@ private fun NavHostController.reemplazarPor(ruta: String) {
 
 private fun androidx.navigation.NavGraphBuilder.modulosPendientes(nav: NavHostController) {
     val modulos = listOf(
-        Rutas.CLIENTES to "Clientes",
+        // Rutas.CLIENTES to "Clientes", // Movido a su pantalla real arriba
         Rutas.AUTOMOVILES to "Automoviles",
         Rutas.ORDENES to "Ordenes de servicio",
         Rutas.NUEVA_ORDEN to "Nueva OST",
-        // Rutas.BITACORA to "Bitacora de problemas"
         Rutas.TECNICOS to "Tecnicos",
         Rutas.DIAGNOSTICO_IA to "Diagnostico con IA",
         Rutas.ASISTENTE_IA to "Asistente tecnico",
