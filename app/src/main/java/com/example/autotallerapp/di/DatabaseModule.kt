@@ -17,10 +17,6 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideFirebaseFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
-
-    @Provides
-    @Singleton
     fun provideClienteDao(@ApplicationContext context: Context): ClienteDao {
         val db = Room.databaseBuilder(
             context,
