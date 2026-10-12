@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
@@ -22,6 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun ClienteScreen(
     viewModel: ClienteViewModel = hiltViewModel(),
+    onVolver: () -> Unit = {},
     onClienteConfirmado: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -43,7 +45,15 @@ fun ClienteScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Gestión de Clientes", style = MaterialTheme.typography.titleLarge) },
+                title = { Text("Gestión de Clientes") },
+                navigationIcon = {
+                    IconButton(onClick = onVolver) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Volver atrás"
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = MaterialTheme.colorScheme.onBackground

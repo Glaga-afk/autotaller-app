@@ -39,13 +39,46 @@ class ClienteRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun registrarCliente(cliente: Cliente): Result<Unit> {
-        return try {
-            val entity = ClienteEntity(cliente.dni, cliente.nombreCompleto, cliente.direccion, cliente.sexo, cliente.telefono)
-            val dto = ClienteDto(cliente.dni, cliente.nombreCompleto, cliente.direccion, cliente.sexo, cliente.telefono)
+    override suspend fun registrarCliente(
+        cliente: Cliente
+    ): Result<Unit> {
+        val entity = ClienteEntity(
+            cliente.dni,
+            cliente.nombreCompleto,
+            cliente.direccion,
+            cliente.sexo,
+            cliente.telefono
+        )
 
+        val dto = ClienteDto(
+            cliente.dni,
+            cliente.nombreCompleto,
+            cliente.direccion,
+            cliente.sexo,
+            cliente.telefono
+        )
+
+        val referencia = firestore.collection("clientes")
+            .document(cliente.dni)
+
+        return try {
+            // Comprueba y crea el documento de forma atómica.
+            firestore.runTransaction { transaction ->
+                val documento = transaction.get(referencia)
+
+                if (documento.exists()) {
+                    throw IllegalStateException(
+                        "El cliente con DNI ${cliente.dni} ya está registrado."
+                    )
+                }
+
+                transaction.set(referencia, dto)
+                true
+            }.await()
+
+            // La copia local se guarda después de confirmar Firestore.
             clienteDao.insertarCliente(entity)
-            firestore.collection("clientes").document(cliente.dni).set(dto).await()
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
