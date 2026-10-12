@@ -31,7 +31,7 @@ object MenuPorRol {
             OpcionMenu("Clientes", Icons.Outlined.People, Rutas.CLIENTES),
             // TODO HU02: reemplazar por la ruta real cuando exista la ficha del cliente
             // OpcionMenu("Automoviles", Icons.Outlined.DirectionsCar, Rutas.rutaNuevoAutomovil("cliente_prueba")),
-            OpcionMenu("Automoviles", Icons.Outlined.DirectionsCar, Rutas.rutaAutomovilesCliente("cliente_prueba")),
+            OpcionMenu("Automoviles", Icons.Outlined.DirectionsCar, Rutas.CLIENTES),
             OpcionMenu("Nueva OST", Icons.Outlined.NoteAdd, Rutas.NUEVA_ORDEN),
             OpcionMenu("Ordenes", Icons.AutoMirrored.Outlined.ListAlt, Rutas.ORDENES)
         )

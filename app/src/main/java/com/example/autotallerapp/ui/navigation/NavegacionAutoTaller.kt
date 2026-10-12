@@ -77,8 +77,11 @@ fun NavegacionAutoTaller(navController: NavHostController = rememberNavControlle
         // Ruta real para la Gestión de Clientes (HU02)
         composable(Rutas.CLIENTES) {
             ClienteScreen(
+                onVolver = {
+                    navController.popBackStack()
+                },
                 onClienteConfirmado = { dniCliente ->
-                    navController.navigate(Rutas.rutaNuevoAutomovil(dniCliente))
+                    navController.navigate(Rutas.rutaAutomovilesCliente(dniCliente))
                 }
             )
         }
