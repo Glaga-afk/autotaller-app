@@ -1,6 +1,7 @@
 package com.example.autotallerapp.ui.cliente
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -42,13 +43,15 @@ fun ClienteScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Gestión de Clientes — HU02") },
+                title = { Text("Gestión de Clientes", style = MaterialTheme.typography.titleLarge) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground
                 )
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -58,27 +61,41 @@ fun ClienteScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+            // Tarjeta de Búsqueda Minimalista
+            OutlinedCard(
+                modifier = Modifier.fillMaxWidth(),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    Text("Búsqueda de Cliente", style = MaterialTheme.typography.titleMedium)
+                    Text("Búsqueda de Cliente", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+
                     OutlinedTextField(
                         value = dniQuery,
                         onValueChange = { if (it.length <= 8 && it.all { char -> char.isDigit() }) dniQuery = it },
                         label = { Text("Número de DNI (8 dígitos)") },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium
                     )
+
                     Button(
                         onClick = { viewModel.buscarPorDni(dniQuery) },
                         enabled = dniQuery.length == 8,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium,
+                        elevation = ButtonDefaults.buttonElevation(0.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                        )
                     ) {
-                        Text("Verificar DNI")
+                        Text("Verificar DNI", style = MaterialTheme.typography.bodyLarge)
                     }
                 }
             }
@@ -86,32 +103,38 @@ fun ClienteScreen(
             AnimatedContent(targetState = uiState, label = "StateAnim") { state ->
                 when (state) {
                     is ClienteUiState.Cargando -> {
-                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator()
+                        Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                         }
                     }
                     is ClienteUiState.ClienteEncontrado -> {
                         Card(
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                            modifier = Modifier.fillMaxWidth()
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = MaterialTheme.shapes.medium
                         ) {
                             Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                modifier = Modifier.padding(20.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Default.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                                     Spacer(Modifier.width(8.dp))
-                                    Text("Cliente ya registrado", style = MaterialTheme.typography.titleSmall)
+                                    Text("Cliente ya registrado", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
                                 }
-                                Text("DNI: ${state.cliente.dni}")
-                                Text("Nombre: ${state.cliente.nombreCompleto}")
-                                Text("Teléfono: ${state.cliente.telefono}")
-                                Text("Dirección: ${state.cliente.direccion}")
-                                Spacer(Modifier.height(8.dp))
+                                Text("DNI: ${state.cliente.dni}", style = MaterialTheme.typography.bodyMedium)
+                                Text("Nombre: ${state.cliente.nombreCompleto}", style = MaterialTheme.typography.bodyLarge)
+                                Text("Teléfono: ${state.cliente.telefono}", style = MaterialTheme.typography.bodyMedium)
+                                Text("Dirección: ${state.cliente.direccion}", style = MaterialTheme.typography.bodyMedium)
+
+                                Spacer(Modifier.height(4.dp))
+
                                 Button(
                                     onClick = { onClienteConfirmado(state.cliente.dni) },
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = MaterialTheme.shapes.medium,
+                                    elevation = ButtonDefaults.buttonElevation(0.dp)
                                 ) {
                                     Text("Seleccionar Cliente")
                                 }
@@ -119,10 +142,14 @@ fun ClienteScreen(
                         }
                     }
                     is ClienteUiState.ClienteNoEncontrado -> {
-                        ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                            colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+                        ) {
                             Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                                modifier = Modifier.padding(20.dp),
+                                verticalArrangement = Arrangement.spacedBy(14.dp)
                             ) {
                                 Text(
                                     "Cliente no registrado. Ingrese los datos:",
@@ -134,29 +161,33 @@ fun ClienteScreen(
                                     onValueChange = {},
                                     enabled = false,
                                     label = { Text("DNI") },
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = MaterialTheme.shapes.medium
                                 )
                                 OutlinedTextField(
                                     value = nombreInput,
                                     onValueChange = { nombreInput = it },
                                     label = { Text("Nombre Completo *") },
-                                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                                    modifier = Modifier.fillMaxWidth()
+                                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.secondary) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = MaterialTheme.shapes.medium
                                 )
                                 OutlinedTextField(
                                     value = direccionInput,
                                     onValueChange = { direccionInput = it },
                                     label = { Text("Dirección *") },
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = MaterialTheme.shapes.medium
                                 )
                                 OutlinedTextField(
                                     value = telefonoInput,
                                     onValueChange = { if (it.all { c -> c.isDigit() }) telefonoInput = it },
                                     label = { Text("Teléfono / Celular *") },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = MaterialTheme.shapes.medium
                                 )
-                                Text("Sexo", style = MaterialTheme.typography.labelLarge)
+                                Text("Sexo", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     FilterChip(
                                         selected = sexoInput == "Masculino",
@@ -179,7 +210,9 @@ fun ClienteScreen(
                                             telefono = telefonoInput
                                         )
                                     },
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = MaterialTheme.shapes.medium,
+                                    elevation = ButtonDefaults.buttonElevation(0.dp)
                                 ) {
                                     Text("Guardar y Registrar Cliente")
                                 }
@@ -189,22 +222,33 @@ fun ClienteScreen(
                     is ClienteUiState.RegistroExitoso -> {
                         Card(
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = MaterialTheme.shapes.medium
                         ) {
                             Column(
-                                modifier = Modifier.padding(16.dp),
+                                modifier = Modifier.padding(24.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(48.dp))
-                                Text("¡Cliente registrado con éxito!", style = MaterialTheme.typography.titleMedium)
-                                Button(onClick = {
-                                    viewModel.limpiarEstado()
-                                    dniQuery = ""
-                                    nombreInput = ""
-                                    direccionInput = ""
-                                    telefonoInput = ""
-                                }) {
+                                Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
+                                Text("¡Cliente registrado con éxito!", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+
+                                // Botón secundario con transparencia/estilo suave
+                                Button(
+                                    onClick = {
+                                        viewModel.limpiarEstado()
+                                        dniQuery = ""
+                                        nombreInput = ""
+                                        direccionInput = ""
+                                        telefonoInput = ""
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                        contentColor = MaterialTheme.colorScheme.primary
+                                    ),
+                                    elevation = ButtonDefaults.buttonElevation(0.dp),
+                                    shape = MaterialTheme.shapes.medium
+                                ) {
                                     Text("Realizar otra consulta")
                                 }
                             }

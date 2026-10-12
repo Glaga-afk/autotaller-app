@@ -1,52 +1,55 @@
 package com.example.autotallerapp.ui.theme
 
-import android.app.Activity
+import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
-import androidx.core.view.WindowCompat
 
-private val EsquemaClaro = lightColorScheme(
-    primary = AzulTaller,
+private val LightColorScheme = lightColorScheme(
+    primary = PrimaryBlue,
     onPrimary = Color.White,
-    primaryContainer = AzulTallerClaro,
-    onPrimaryContainer = AzulTallerOscuro,
-    secondary = GrisTaller,
-    error = RojoError,
-    background = Color(0xFFFBFBFD),
-    surface = Color.White
+    primaryContainer = PrimaryBlueLight,
+    onPrimaryContainer = Color(0xFF1E3A8A),
+    background = BackgroundLight,
+    surface = SurfaceLight,
+    onBackground = TextPrimary,
+    onSurface = TextPrimary,
+    outline = OutlineColor
 )
 
-private val EsquemaOscuro = darkColorScheme(
-    primary = Color(0xFF85B7EB),
-    onPrimary = Color(0xFF042C53),
-    primaryContainer = Color(0xFF0C447C),
-    onPrimaryContainer = AzulTallerClaro,
-    secondary = Color(0xFFB4B2A9),
-    error = Color(0xFFF09595),
-    background = Color(0xFF14161A),
-    surface = Color(0xFF1B1E23)
+private val DarkColorScheme = darkColorScheme(
+    primary = Color(0xFF3B82F6),
+    onPrimary = Color.White,
+    background = BackgroundDark,
+    surface = SurfaceDark,
+    onBackground = TextPrimaryDark,
+    onSurface = TextPrimaryDark
 )
 
 @Composable
 fun AutoTallerTheme(
-    enOscuro: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    dynamicColor: Boolean = false, // Desactivado para mantener la identidad visual corporativa
     content: @Composable () -> Unit
 ) {
-    val esquema = if (enOscuro) EsquemaOscuro else EsquemaClaro
-    val vista = LocalView.current
-    if (!vista.isInEditMode) {
-        SideEffect {
-            val ventana = (vista.context as Activity).window
-            WindowCompat.getInsetsController(ventana, vista)
-                .isAppearanceLightStatusBars = !enOscuro
+    val colorScheme = when {
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+            val context = LocalContext.current
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
+        darkTheme -> DarkColorScheme
+        else -> LightColorScheme
     }
-    MaterialTheme(colorScheme = esquema, content = content)
+
+    MaterialTheme(
+        colorScheme = colorScheme,
+        typography = Typography,
+        content = content
+    )
 }

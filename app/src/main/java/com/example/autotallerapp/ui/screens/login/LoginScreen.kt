@@ -1,5 +1,6 @@
 package com.example.autotallerapp.ui.screens.login
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,9 +14,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -72,78 +75,110 @@ fun LoginScreen(
         }
     }
 
-    Scaffold(snackbarHost = { SnackbarHost(snackbar) }) { relleno ->
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { relleno ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(relleno)
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 32.dp)
+                .padding(horizontal = 24.dp, vertical = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            LogoAutoTaller(tamano = 56.dp)
-            Spacer(Modifier.height(20.dp))
-            Text("Iniciar sesion", style = MaterialTheme.typography.headlineSmall)
+            Spacer(Modifier.height(12.dp))
+            LogoAutoTaller(tamano = 64.dp)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Iniciar sesión",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onBackground
+            )
             Text(
                 "Accede con tu cuenta del taller",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(12.dp))
 
-            CampoTexto(
-                valor = estado.correo,
-                alCambiar = viewModel::alCambiarCorreo,
-                etiqueta = "Correo",
-                error = estado.errorCorreo,
-                habilitado = estado.formularioHabilitado,
-                tipoTeclado = KeyboardType.Email,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            CampoPassword(
-                valor = estado.password,
-                alCambiar = viewModel::alCambiarPassword,
-                etiqueta = "Contrasena",
-                error = estado.errorPassword,
-                habilitado = estado.formularioHabilitado,
-                imeAction = ImeAction.Done,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Row(
+            // Tarjeta contenedora de credenciales (Estilo minimalista y limpio)
+            OutlinedCard(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = MaterialTheme.shapes.large
             ) {
-                TextButton(
-                    onClick = irARecuperar,
-                    enabled = estado.formularioHabilitado
-                ) { Text("Olvide mi contrasena") }
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    CampoTexto(
+                        valor = estado.correo,
+                        alCambiar = viewModel::alCambiarCorreo,
+                        etiqueta = "Correo",
+                        error = estado.errorCorreo,
+                        habilitado = estado.formularioHabilitado,
+                        tipoTeclado = KeyboardType.Email,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    CampoPassword(
+                        valor = estado.password,
+                        alCambiar = viewModel::alCambiarPassword,
+                        etiqueta = "Contraseña",
+                        error = estado.errorPassword,
+                        habilitado = estado.formularioHabilitado,
+                        imeAction = ImeAction.Done,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(
+                            onClick = irARecuperar,
+                            enabled = estado.formularioHabilitado
+                        ) {
+                            Text("Olvidé mi contraseña", color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+
+                    BotonPrincipal(
+                        texto = "Iniciar sesión",
+                        alPulsar = viewModel::alPulsarIngresar,
+                        cargando = estado.cargando,
+                        habilitado = estado.formularioHabilitado
+                    )
+                }
             }
 
             Spacer(Modifier.height(8.dp))
 
-            BotonPrincipal(
-                texto = "Iniciar sesion",
-                alPulsar = viewModel::alPulsarIngresar,
-                cargando = estado.cargando,
-                habilitado = estado.formularioHabilitado
-            )
-
-            Spacer(Modifier.height(20.dp))
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                HorizontalDivider(modifier = Modifier.weight(1f))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
                 Text(
                     "  o  ",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                HorizontalDivider(modifier = Modifier.weight(1f))
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(8.dp))
 
             BotonSecundario(
                 texto = "Continuar con Google",
@@ -153,7 +188,8 @@ fun LoginScreen(
                         Box(modifier = Modifier.size(20.dp), contentAlignment = Alignment.Center) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                         Spacer(Modifier.size(12.dp))
@@ -166,14 +202,14 @@ fun LoginScreen(
                             .onSuccess { viewModel.alObtenerIdTokenGoogle(it) }
                             .onFailure {
                                 viewModel.alFallarGoogle(
-                                    "No se pudo continuar con Google. Intentalo de nuevo"
+                                    "No se pudo continuar con Google. Inténtalo de nuevo"
                                 )
                             }
                     }
                 }
             )
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(16.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -181,14 +217,16 @@ fun LoginScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "No tienes cuenta?",
+                    "¿No tienes cuenta?",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 TextButton(
                     onClick = irARegistro,
                     enabled = estado.formularioHabilitado
-                ) { Text("Crear cuenta") }
+                ) {
+                    Text("Crear cuenta", color = MaterialTheme.colorScheme.primary)
+                }
             }
         }
     }
