@@ -1,11 +1,14 @@
 package com.example.autotallerapp.ui.screens.bitacora
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,17 +18,27 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.outlined.AcUnit
+import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.Build
+import androidx.compose.material.icons.outlined.DonutLarge
+import androidx.compose.material.icons.outlined.Height
 import androidx.compose.material.icons.outlined.ManageSearch
-import androidx.compose.material3.AssistChip
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.StopCircle
+import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +47,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -45,6 +59,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -97,6 +114,7 @@ fun BitacoraScreen(
                 onSearch = {},
                 active = false,
                 onActiveChange = {},
+                windowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp),
                 placeholder = { Text("Buscar por palabra clave...") },
                 leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
                 trailingIcon = {
@@ -137,12 +155,20 @@ private fun FiltrosBitacora(
         Spacer(Modifier.height(4.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(SistemaAutomovil.entries) { sistema ->
+                val color = colorDe(sistema)
+                val seleccionado = estado.sistemaSeleccionado == sistema
+
                 FilterChip(
-                    selected = estado.sistemaSeleccionado == sistema,
-                    onClick = {
-                        alSeleccionarSistema(if (estado.sistemaSeleccionado == sistema) null else sistema)
-                    },
-                    label = { Text(sistema.etiqueta) }
+                    selected = seleccionado,
+                    onClick = { alSeleccionarSistema(if (seleccionado) null else sistema) },
+                    label = { Text(sistema.etiqueta, fontWeight = FontWeight.Bold) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = color.copy(alpha = 0.15f),
+                        labelColor = color,
+                        selectedContainerColor = color,
+                        selectedLabelColor = Color.White
+                    ),
+                    border = BorderStroke(1.dp, color)
                 )
             }
         }
@@ -221,16 +247,23 @@ private fun TarjetaProblema(problema: ProblemaTecnico) {
     Card(onClick = { expandido = !expandido }, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                AssistChip(onClick = {}, enabled = false, label = { Text(problema.sistema.etiqueta) })
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    "${problema.marca} ${problema.modelo}".trim(),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    EtiquetaSistema(problema.sistema)
+
+                    Spacer(Modifier.height(10.dp))
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+                        DatoTarjeta(etiqueta = "Marca", valor = problema.marca)
+                        DatoTarjeta(etiqueta = "Modelo", valor = problema.modelo)
+                    }
+
+                    Spacer(Modifier.height(10.dp))
+                    Text(problema.titulo, style = MaterialTheme.typography.titleMedium)
+                }
+
+                Spacer(Modifier.width(12.dp))
+                IconoSistema(problema.sistema)
             }
-            Spacer(Modifier.height(8.dp))
-            Text(problema.titulo, style = MaterialTheme.typography.titleMedium)
 
             if (expandido) {
                 Spacer(Modifier.height(8.dp))
@@ -253,6 +286,75 @@ private fun TarjetaProblema(problema: ProblemaTecnico) {
             }
         }
     }
+}
+
+@Composable
+private fun IconoSistema(sistema: SistemaAutomovil) {
+    val color = colorDe(sistema)
+    Box(
+        modifier = Modifier
+            .size(56.dp)
+            .background(color = color.copy(alpha = 0.15f), shape = CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = iconoDe(sistema),
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier.size(30.dp)
+        )
+    }
+}
+
+private fun iconoDe(sistema: SistemaAutomovil): ImageVector = when (sistema) {
+    SistemaAutomovil.MOTOR -> Icons.Outlined.Settings
+    SistemaAutomovil.FRENOS -> Icons.Outlined.StopCircle
+    SistemaAutomovil.TRANSMISION -> Icons.Outlined.SwapHoriz
+    SistemaAutomovil.ELECTRICO -> Icons.Outlined.Bolt
+    SistemaAutomovil.SUSPENSION -> Icons.Outlined.Height
+    SistemaAutomovil.REFRIGERACION -> Icons.Outlined.AcUnit
+    SistemaAutomovil.DIRECCION -> Icons.Outlined.DonutLarge
+    SistemaAutomovil.OTRO -> Icons.Outlined.Build
+}
+
+@Composable
+private fun EtiquetaSistema(sistema: SistemaAutomovil) {
+    Surface(color = colorDe(sistema), shape = RoundedCornerShape(8.dp)) {
+        Text(
+            text = sistema.etiqueta,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+        )
+    }
+}
+
+@Composable
+private fun DatoTarjeta(etiqueta: String, valor: String) {
+    Column {
+        Text(
+            text = etiqueta,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = valor.ifBlank { "-" },
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+private fun colorDe(sistema: SistemaAutomovil): Color = when (sistema) {
+    SistemaAutomovil.MOTOR -> Color(0xFFEF6C00)
+    SistemaAutomovil.FRENOS -> Color(0xFFD32F2F)
+    SistemaAutomovil.TRANSMISION -> Color(0xFF7B1FA2)
+    SistemaAutomovil.ELECTRICO -> Color(0xFF1976D2)
+    SistemaAutomovil.SUSPENSION -> Color(0xFF388E3C)
+    SistemaAutomovil.REFRIGERACION -> Color(0xFF0097A7)
+    SistemaAutomovil.DIRECCION -> Color(0xFF455A64)
+    SistemaAutomovil.OTRO -> Color(0xFF757575)
 }
 
 @Composable

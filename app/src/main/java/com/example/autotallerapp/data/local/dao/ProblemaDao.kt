@@ -14,8 +14,8 @@ interface ProblemaDao {
         SELECT * FROM problemas_fts
         WHERE problemas_fts MATCH :consulta
         AND (:sistema = '' OR sistema = :sistema)
-        AND (:marca = '' OR marca = :marca)
-        AND (:modelo = '' OR modelo = :modelo)
+        AND (:marca = '' OR marca LIKE '%' || :marca || '%')
+        AND (:modelo = '' OR modelo LIKE '%' || :modelo || '%')
         ORDER BY titulo ASC
     """)
     fun buscarConTexto(
@@ -28,8 +28,8 @@ interface ProblemaDao {
     @Query("""
         SELECT * FROM problemas_fts
         WHERE (:sistema = '' OR sistema = :sistema)
-        AND (:marca = '' OR marca = :marca)
-        AND (:modelo = '' OR modelo = :modelo)
+        AND (:marca = '' OR marca LIKE '%' || :marca || '%')
+        AND (:modelo = '' OR modelo LIKE '%' || :modelo || '%')
         ORDER BY titulo ASC
     """)
     fun buscarSinTexto(
