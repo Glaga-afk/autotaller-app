@@ -88,4 +88,9 @@ dependencies {
     ksp("androidx.hilt:hilt-compiler:1.2.0")
 
     implementation("com.google.mlkit:text-recognition:16.0.1")
+
+    // HU05: orden de servicio con evidencia
+    implementation("com.google.firebase:firebase-storage")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation("io.coil-kt:coil-compose:2.7.0")
 }
