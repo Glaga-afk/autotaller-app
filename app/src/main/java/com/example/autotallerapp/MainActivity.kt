@@ -15,6 +15,7 @@ class MainActivity : ComponentActivity() {
 
         com.example.autotallerapp.work.ProgramadorSincronizacion.programarPeriodica(this)
         com.example.autotallerapp.work.ProgramadorSincronizacion.sincronizarAhora(this)
+        com.example.autotallerapp.work.ProgramadorSincronizacion.enviarOrdenesPendientes(this)
 
         enableEdgeToEdge()
         setContent {

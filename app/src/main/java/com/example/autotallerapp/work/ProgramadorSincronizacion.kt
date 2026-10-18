@@ -1,7 +1,9 @@
 package com.example.autotallerapp.work
 
 import android.content.Context
+import androidx.work.BackoffPolicy
 import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
@@ -38,5 +40,27 @@ object ProgramadorSincronizacion {
             .build()
 
         WorkManager.getInstance(contexto).enqueue(solicitud)
+    }
+
+    /**
+     * HU05: envia las ordenes registradas sin conexion.
+     * APPEND_OR_REPLACE encadena el envio detras del que este en curso,
+     * asi una orden registrada mientras se envian otras no se pierde.
+     */
+    fun enviarOrdenesPendientes(contexto: Context) {
+        val restricciones = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val solicitud = OneTimeWorkRequestBuilder<SincronizarOrdenesWorker>()
+            .setConstraints(restricciones)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
+            .build()
+
+        WorkManager.getInstance(contexto).enqueueUniqueWork(
+            SincronizarOrdenesWorker.NOMBRE_TRABAJO,
+            ExistingWorkPolicy.APPEND_OR_REPLACE,
+            solicitud
+        )
     }
 }

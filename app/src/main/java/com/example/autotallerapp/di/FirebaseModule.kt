@@ -2,6 +2,7 @@ package com.example.autotallerapp.di
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,4 +20,9 @@ object FirebaseModule {
     @Provides
     @Singleton
     fun proveerFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
+
+    // Solo se crea si se usa AlmacenamientoStorage (plan Blaze)
+    @Provides
+    @Singleton
+    fun proveerStorage(): FirebaseStorage = FirebaseStorage.getInstance()
 }

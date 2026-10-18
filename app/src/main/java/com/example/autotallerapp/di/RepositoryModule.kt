@@ -1,15 +1,19 @@
 package com.example.autotallerapp.di
 
+import com.example.autotallerapp.data.remote.almacenamiento.AlmacenamientoArchivos
+import com.example.autotallerapp.data.remote.almacenamiento.AlmacenamientoFirestore
 import com.example.autotallerapp.data.repository.AuthRepositoryImpl
 import com.example.autotallerapp.data.repository.AutomovilRepositoryImpl
 import com.example.autotallerapp.data.repository.BitacoraRepositoryImpl
 import com.example.autotallerapp.data.repository.CatalogoRepositoryImpl
 import com.example.autotallerapp.data.repository.ClienteRepositoryImpl
+import com.example.autotallerapp.data.repository.OrdenRepositoryImpl
 import com.example.autotallerapp.domain.repository.AuthRepository
 import com.example.autotallerapp.domain.repository.AutomovilRepository
 import com.example.autotallerapp.domain.repository.BitacoraRepository
 import com.example.autotallerapp.domain.repository.CatalogoRepository
 import com.example.autotallerapp.domain.repository.ClienteRepository
+import com.example.autotallerapp.domain.repository.OrdenRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -38,4 +42,14 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun enlazarCatalogoRepository(impl: CatalogoRepositoryImpl): CatalogoRepository
+
+    @Binds
+    @Singleton
+    abstract fun enlazarOrdenRepository(impl: OrdenRepositoryImpl): OrdenRepository
+
+    // Plan Spark: evidencias en Firestore (Base64).
+    // Al pasar a Blaze, cambiar AlmacenamientoFirestore por AlmacenamientoStorage.
+    @Binds
+    @Singleton
+    abstract fun enlazarAlmacenamiento(impl: AlmacenamientoFirestore): AlmacenamientoArchivos
 }
