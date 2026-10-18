@@ -31,4 +31,11 @@ object Rutas {
     const val AUTOMOVILES_CLIENTE = "automoviles_cliente/{clienteId}"
 
     fun rutaAutomovilesCliente(clienteId: String) = "automoviles_cliente/$clienteId"
+
+    // Orden de servicio (HU05)
+    const val NUEVA_ORDEN_AUTOMOVIL = "nueva_orden/{clienteId}/{automovilId}"
+    const val CAPTURA_FOTO = "captura_foto"
+
+    fun rutaNuevaOrden(clienteId: String, automovilId: String) =
+        "nueva_orden/$clienteId/$automovilId"
 }

@@ -32,7 +32,8 @@ object MenuPorRol {
             // TODO HU02: reemplazar por la ruta real cuando exista la ficha del cliente
             // OpcionMenu("Automoviles", Icons.Outlined.DirectionsCar, Rutas.rutaNuevoAutomovil("cliente_prueba")),
             OpcionMenu("Automoviles", Icons.Outlined.DirectionsCar, Rutas.CLIENTES),
-            OpcionMenu("Nueva OST", Icons.Outlined.NoteAdd, Rutas.NUEVA_ORDEN),
+            // HU05: la OST empieza buscando al cliente por DNI y luego eligiendo su automovil
+            OpcionMenu("Nueva OST", Icons.Outlined.NoteAdd, Rutas.CLIENTES),
             OpcionMenu("Ordenes", Icons.AutoMirrored.Outlined.ListAlt, Rutas.ORDENES)
         )
         Rol.TECNICO_SUPERVISOR -> listOf(
@@ -61,7 +62,7 @@ object MenuPorRol {
         return when (rol) {
             Rol.RECEPCIONISTA -> listOf(
                 inicio,
-                OpcionMenu("OST", Icons.Outlined.NoteAdd, Rutas.NUEVA_ORDEN),
+                OpcionMenu("OST", Icons.Outlined.NoteAdd, Rutas.CLIENTES),
                 OpcionMenu("Clientes", Icons.Outlined.People, Rutas.CLIENTES)
             )
             Rol.TECNICO_SUPERVISOR -> listOf(

@@ -45,6 +45,7 @@ import com.example.autotallerapp.domain.model.Automovil
 fun ListaAutomovilesScreen(
     volver: () -> Unit,
     irANuevoAutomovil: () -> Unit,
+    alSeleccionarAutomovil: (Automovil) -> Unit = {},
     viewModel: ListaAutomovilesViewModel = hiltViewModel()
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
@@ -105,8 +106,18 @@ fun ListaAutomovilesScreen(
                     ),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    item {
+                        Text(
+                            "Toca un automovil para registrar una orden de servicio",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     items(estado.automoviles, key = { it.id }) { automovil ->
-                        TarjetaAutomovil(automovil)
+                        TarjetaAutomovil(
+                            automovil = automovil,
+                            alPulsar = { alSeleccionarAutomovil(automovil) }
+                        )
                     }
                 }
             }
@@ -115,13 +126,14 @@ fun ListaAutomovilesScreen(
 }
 
 @Composable
-private fun TarjetaAutomovil(automovil: Automovil) {
+private fun TarjetaAutomovil(automovil: Automovil, alPulsar: () -> Unit) {
     val detalle = listOfNotNull(
         automovil.anio?.toString(),
         automovil.color.ifBlank { null }
     ).joinToString(" · ")
 
     Card(
+        onClick = alPulsar,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         modifier = Modifier.fillMaxWidth()
     ) {
