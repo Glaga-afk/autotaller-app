@@ -21,6 +21,11 @@ import com.example.autotallerapp.ui.screens.escaner.EscanerPlacaScreen
 import com.example.autotallerapp.ui.screens.automovil.ListaAutomovilesScreen
 import com.example.autotallerapp.ui.screens.bitacora.BitacoraScreen
 import com.example.autotallerapp.ui.cliente.ClienteScreen
+import com.example.autotallerapp.ui.screens.orden.CapturaFotoScreen
+import com.example.autotallerapp.ui.screens.orden.NuevaOrdenScreen
+
+/** Clave con la que la camara devuelve la ruta de la foto a la pantalla de la orden. */
+private const val CLAVE_FOTO_CAPTURADA = "foto_capturada"
 
 @Composable
 fun NavegacionAutoTaller(navController: NavHostController = rememberNavController()) {
@@ -123,7 +128,41 @@ fun NavegacionAutoTaller(navController: NavHostController = rememberNavControlle
 
             ListaAutomovilesScreen(
                 volver = { navController.popBackStack() },
-                irANuevoAutomovil = { navController.navigate(Rutas.rutaNuevoAutomovil(clienteId)) }
+                irANuevoAutomovil = { navController.navigate(Rutas.rutaNuevoAutomovil(clienteId)) },
+                alSeleccionarAutomovil = { automovil ->
+                    navController.navigate(Rutas.rutaNuevaOrden(clienteId, automovil.id))
+                }
+            )
+        }
+
+        // Registro de la orden de servicio (HU05)
+        composable(
+            route = Rutas.NUEVA_ORDEN_AUTOMOVIL,
+            arguments = listOf(
+                navArgument("clienteId") { type = NavType.StringType },
+                navArgument("automovilId") { type = NavType.StringType }
+            )
+        ) { entrada ->
+            val fotoCapturada by entrada.savedStateHandle
+                .getStateFlow<String?>(CLAVE_FOTO_CAPTURADA, null)
+                .collectAsState()
+
+            NuevaOrdenScreen(
+                fotoCapturada = fotoCapturada,
+                alConsumirFoto = { entrada.savedStateHandle[CLAVE_FOTO_CAPTURADA] = null },
+                volver = { navController.popBackStack() },
+                irACamara = { navController.navigate(Rutas.CAPTURA_FOTO) },
+                alFinalizar = { navController.popBackStack(Rutas.INICIO, inclusive = false) }
+            )
+        }
+
+        composable(Rutas.CAPTURA_FOTO) {
+            CapturaFotoScreen(
+                volver = { navController.popBackStack() },
+                alCapturar = { ruta ->
+                    navController.previousBackStackEntry?.savedStateHandle?.set(CLAVE_FOTO_CAPTURADA, ruta)
+                    navController.popBackStack()
+                }
             )
         }
 
@@ -143,7 +182,6 @@ private fun androidx.navigation.NavGraphBuilder.modulosPendientes(nav: NavHostCo
         // Rutas.CLIENTES to "Clientes", // Movido a su pantalla real arriba
         Rutas.AUTOMOVILES to "Automoviles",
         Rutas.ORDENES to "Ordenes de servicio",
-        Rutas.NUEVA_ORDEN to "Nueva OST",
         Rutas.TECNICOS to "Tecnicos",
         Rutas.DIAGNOSTICO_IA to "Diagnostico con IA",
         Rutas.ASISTENTE_IA to "Asistente tecnico",

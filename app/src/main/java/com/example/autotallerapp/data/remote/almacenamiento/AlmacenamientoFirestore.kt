@@ -15,7 +15,7 @@ import javax.inject.Singleton
  * ordenes/{id}/evidencias, un documento por archivo.
  *
  * Firestore limita cada documento a 1 MiB y Base64 aumenta el tamano un 33%,
- * por eso las fotos se comprimen al capturarlas y se rechaza todo archivo
+ * por eso las fotos se comprimen al capturarlas y se rechaza cualquier archivo
  * de mas de 700 KB.
  */
 @Singleton
