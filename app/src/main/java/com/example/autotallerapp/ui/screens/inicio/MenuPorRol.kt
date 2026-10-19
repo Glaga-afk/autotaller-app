@@ -29,10 +29,8 @@ object MenuPorRol {
     fun opciones(rol: Rol): List<OpcionMenu> = when (rol) {
         Rol.RECEPCIONISTA -> listOf(
             OpcionMenu("Clientes", Icons.Outlined.People, Rutas.CLIENTES),
-            // TODO HU02: reemplazar por la ruta real cuando exista la ficha del cliente
-            // OpcionMenu("Automoviles", Icons.Outlined.DirectionsCar, Rutas.rutaNuevoAutomovil("cliente_prueba")),
-            OpcionMenu("Automoviles", Icons.Outlined.DirectionsCar, Rutas.CLIENTES),
-            // HU05: la OST empieza buscando al cliente por DNI y luego eligiendo su automovil
+            OpcionMenu("Automoviles", Icons.Outlined.DirectionsCar, Rutas.AUTOMOVILES),
+            // La OST requiere primero identificar/buscar al cliente
             OpcionMenu("Nueva OST", Icons.Outlined.NoteAdd, Rutas.CLIENTES),
             OpcionMenu("Ordenes", Icons.AutoMirrored.Outlined.ListAlt, Rutas.ORDENES)
         )
