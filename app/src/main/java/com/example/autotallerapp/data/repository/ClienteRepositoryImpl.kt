@@ -6,7 +6,9 @@ import com.example.autotallerapp.data.remote.dto.ClienteDto
 import com.example.autotallerapp.domain.model.Cliente
 import com.example.autotallerapp.domain.repository.ClienteRepository
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class ClienteRepositoryImpl @Inject constructor(
@@ -82,6 +84,24 @@ class ClienteRepositoryImpl @Inject constructor(
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    override fun obtenerClientes(): Flow<List<Cliente>> {
+        return clienteDao.obtenerTodosLosClientes().map { listaEntities ->
+            listaEntities.map { entity ->
+                // Si ya tienes una función de extensión como entity.toDomain(), úsala:
+                // entity.toDomain()
+
+                // O mapea campo por campo según tus clases:
+                Cliente(
+                    dni = entity.dni,
+                    nombreCompleto = entity.nombreCompleto, // Revisa si en tu Entity se llama 'nombre' o 'nombreCompleto'
+                    direccion = entity.direccion,
+                    sexo = entity.sexo,
+                    telefono = entity.telefono
+                )
+            }
         }
     }
 }

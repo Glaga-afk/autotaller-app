@@ -32,4 +32,7 @@ interface OrdenDao {
     /** Flow: Room avisa cada vez que la fila cambia (por ejemplo, cuando recibe su numero). */
     @Query("SELECT * FROM ordenes WHERE idLocal = :idLocal LIMIT 1")
     fun observar(idLocal: String): Flow<OrdenEntity?>
+
+    @Query("SELECT * FROM ordenes") // O el nombre de la tabla de tu OrdenEntity
+    suspend fun obtenerTodas(): List<OrdenEntity>
 }

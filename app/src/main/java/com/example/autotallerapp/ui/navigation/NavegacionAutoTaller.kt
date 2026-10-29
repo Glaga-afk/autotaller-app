@@ -23,6 +23,8 @@ import com.example.autotallerapp.ui.screens.bitacora.BitacoraScreen
 import com.example.autotallerapp.ui.cliente.ClienteScreen
 import com.example.autotallerapp.ui.screens.orden.CapturaFotoScreen
 import com.example.autotallerapp.ui.screens.orden.NuevaOrdenScreen
+import com.example.autotallerapp.ui.screens.orden.NuevaOstClienteScreen
+import com.example.autotallerapp.ui.screens.orden.ListaOrdenesScreen
 
 /** Clave con la que la camara devuelve la ruta de la foto a la pantalla de la orden. */
 private const val CLAVE_FOTO_CAPTURADA = "foto_capturada"
@@ -58,6 +60,16 @@ fun NavegacionAutoTaller(navController: NavHostController = rememberNavControlle
 
         composable(Rutas.RECUPERAR) {
             RecuperarScreen(volver = { navController.popBackStack() })
+        }
+
+        composable(Rutas.ORDENES) {
+            ListaOrdenesScreen(
+                volver = { navController.popBackStack() },
+                irADetalleOrden = { ordenId ->
+                    // Aquí navegaremos al detalle de la orden cuando lo creemos
+                    // navController.navigate(Rutas.rutaDetalleOrden(ordenId))
+                }
+            )
         }
 
         composable(Rutas.PENDIENTE) {
@@ -166,6 +178,15 @@ fun NavegacionAutoTaller(navController: NavHostController = rememberNavControlle
             )
         }
 
+        composable(Rutas.NUEVA_OST_CLIENTE) {
+            NuevaOstClienteScreen(
+                onVolver = { navController.popBackStack() },
+                onClienteSeleccionado = { dniCliente ->
+                    navController.navigate(Rutas.rutaAutomovilesCliente(dniCliente))
+                }
+            )
+        }
+
         modulosPendientes(navController)
     }
 }
@@ -181,7 +202,6 @@ private fun androidx.navigation.NavGraphBuilder.modulosPendientes(nav: NavHostCo
     val modulos = listOf(
         // Rutas.CLIENTES to "Clientes", // Movido a su pantalla real arriba
         Rutas.AUTOMOVILES to "Automoviles",
-        Rutas.ORDENES to "Ordenes de servicio",
         Rutas.TECNICOS to "Tecnicos",
         Rutas.DIAGNOSTICO_IA to "Diagnostico con IA",
         Rutas.ASISTENTE_IA to "Asistente tecnico",

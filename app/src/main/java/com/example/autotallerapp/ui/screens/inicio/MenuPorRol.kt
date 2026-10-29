@@ -31,7 +31,7 @@ object MenuPorRol {
             OpcionMenu("Clientes", Icons.Outlined.People, Rutas.CLIENTES),
             OpcionMenu("Automoviles", Icons.Outlined.DirectionsCar, Rutas.AUTOMOVILES),
             // La OST requiere primero identificar/buscar al cliente
-            OpcionMenu("Nueva OST", Icons.Outlined.NoteAdd, Rutas.CLIENTES),
+            OpcionMenu("Nueva OST", Icons.Outlined.NoteAdd, Rutas.NUEVA_OST_CLIENTE),
             OpcionMenu("Ordenes", Icons.AutoMirrored.Outlined.ListAlt, Rutas.ORDENES)
         )
         Rol.TECNICO_SUPERVISOR -> listOf(
@@ -60,8 +60,8 @@ object MenuPorRol {
         return when (rol) {
             Rol.RECEPCIONISTA -> listOf(
                 inicio,
-                OpcionMenu("OST", Icons.Outlined.NoteAdd, Rutas.CLIENTES),
-                OpcionMenu("Clientes", Icons.Outlined.People, Rutas.CLIENTES)
+                OpcionMenu("OST", Icons.Outlined.NoteAdd, Rutas.ORDENES), // <-- Corregido a Rutas.ORDENES
+                OpcionMenu("Clientes", Icons.Outlined.People, Rutas.CLIENTES),
             )
             Rol.TECNICO_SUPERVISOR -> listOf(
                 inicio,

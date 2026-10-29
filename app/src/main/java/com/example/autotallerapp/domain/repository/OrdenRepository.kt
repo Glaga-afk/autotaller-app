@@ -14,4 +14,6 @@ interface OrdenRepository {
 
     /** Envia a Firestore todas las ordenes que siguen en el celular. Devuelve cuantas se enviaron. */
     suspend fun sincronizarPendientes(): Resultado<Int>
+
+    suspend fun obtenerTodas(): Resultado<List<OrdenServicio>>
 }

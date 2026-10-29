@@ -1,15 +1,16 @@
 package com.example.autotallerapp.ui.cliente
 
-import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,19 +30,15 @@ fun ClienteScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     var dniQuery by remember { mutableStateOf("") }
-    var nombreInput by remember { mutableStateOf("") }
-    var direccionInput by remember { mutableStateOf("") }
-    var sexoInput by remember { mutableStateOf("Masculino") }
-    var telefonoInput by remember { mutableStateOf("") }
+
+    // Estados para controlar los diálogos flotantes
+    var mostrarDialogoAgregar by remember { mutableStateOf(false) }
+    var clienteSeleccionadoParaOpciones by remember { mutableStateOf<Any?>(null) } // Puede almacenar el objeto de cliente según la entidad
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(uiState) {
-        if (uiState is ClienteUiState.Error) {
-            snackbarHostState.showSnackbar((uiState as ClienteUiState.Error).mensaje)
-        }
-    }
-
+    // Si tu ViewModel provee una lista o usas la búsqueda por DNI del uiState
+    // Aquí nos adaptamos al flujo original de tu uiState
     Scaffold(
         topBar = {
             TopAppBar(
@@ -60,6 +57,14 @@ fun ClienteScreen(
                 )
             )
         },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { mostrarDialogoAgregar = true },
+                containerColor = MaterialTheme.colorScheme.primary
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Agregar Cliente")
+            }
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
@@ -67,206 +72,231 @@ fun ClienteScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Tarjeta de Búsqueda Minimalista
-            OutlinedCard(
+            // Barra de búsqueda por DNI (conecta con tu método original del ViewModel)
+            OutlinedTextField(
+                value = dniQuery,
+                onValueChange = {
+                    if (it.length <= 8 && it.all { char -> char.isDigit() }) {
+                        dniQuery = it
+                        if (it.length == 8) {
+                            viewModel.buscarPorDni(it)
+                        }
+                    }
+                },
+                label = { Text("Buscar por número de DNI (8 dígitos)") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    Text("Búsqueda de Cliente", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                shape = MaterialTheme.shapes.medium
+            )
 
-                    OutlinedTextField(
-                        value = dniQuery,
-                        onValueChange = { if (it.length <= 8 && it.all { char -> char.isDigit() }) dniQuery = it },
-                        label = { Text("Número de DNI (8 dígitos)") },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium
-                    )
-
-                    Button(
-                        onClick = { viewModel.buscarPorDni(dniQuery) },
-                        enabled = dniQuery.length == 8,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium,
-                        elevation = ButtonDefaults.buttonElevation(0.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                        )
-                    ) {
-                        Text("Verificar DNI", style = MaterialTheme.typography.bodyLarge)
+            // Renderizado según el uiState original
+            when (val state = uiState) {
+                is ClienteUiState.Cargando -> {
+                    Box(modifier = Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                     }
                 }
-            }
-
-            AnimatedContent(targetState = uiState, label = "StateAnim") { state ->
-                when (state) {
-                    is ClienteUiState.Cargando -> {
-                        Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                        }
-                    }
-                    is ClienteUiState.ClienteEncontrado -> {
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = MaterialTheme.shapes.medium
+                is ClienteUiState.ClienteEncontrado -> {
+                    // Tarjeta del cliente encontrado con opción a seleccionarlo o dar opciones
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { clienteSeleccionadoParaOpciones = state.cliente },
+                        shape = MaterialTheme.shapes.medium,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Column(
-                                modifier = Modifier.padding(20.dp),
-                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            Text(text = "Cliente Encontrado", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                            Text(text = state.cliente.nombreCompleto, style = MaterialTheme.typography.titleMedium)
+                            Text(text = "DNI: ${state.cliente.dni} | Tel: ${state.cliente.telefono}", style = MaterialTheme.typography.bodyMedium)
+
+                            Spacer(Modifier.height(8.dp))
+                            Button(
+                                onClick = { onClienteConfirmado(state.cliente.dni) },
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                                    Spacer(Modifier.width(8.dp))
-                                    Text("Cliente ya registrado", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                                }
-                                Text("DNI: ${state.cliente.dni}", style = MaterialTheme.typography.bodyMedium)
-                                Text("Nombre: ${state.cliente.nombreCompleto}", style = MaterialTheme.typography.bodyLarge)
-                                Text("Teléfono: ${state.cliente.telefono}", style = MaterialTheme.typography.bodyMedium)
-                                Text("Dirección: ${state.cliente.direccion}", style = MaterialTheme.typography.bodyMedium)
-
-                                Spacer(Modifier.height(4.dp))
-
-                                Button(
-                                    onClick = { onClienteConfirmado(state.cliente.dni) },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = MaterialTheme.shapes.medium,
-                                    elevation = ButtonDefaults.buttonElevation(0.dp)
-                                ) {
-                                    Text("Seleccionar Cliente")
-                                }
+                                Text("Seleccionar para Nueva OST")
                             }
                         }
                     }
-                    is ClienteUiState.ClienteNoEncontrado -> {
-                        OutlinedCard(
-                            modifier = Modifier.fillMaxWidth(),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                            colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+                }
+                is ClienteUiState.ClienteNoEncontrado -> {
+                    // Si no se encuentra, mostramos un aviso directo para registrarlo con el diálogo flotante o formulario integrado
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Column(
-                                modifier = Modifier.padding(20.dp),
-                                verticalArrangement = Arrangement.spacedBy(14.dp)
-                            ) {
-                                Text(
-                                    "Cliente no registrado. Ingrese los datos:",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                                OutlinedTextField(
-                                    value = state.dniBuscado,
-                                    onValueChange = {},
-                                    enabled = false,
-                                    label = { Text("DNI") },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = MaterialTheme.shapes.medium
-                                )
-                                OutlinedTextField(
-                                    value = nombreInput,
-                                    onValueChange = { nombreInput = it },
-                                    label = { Text("Nombre Completo *") },
-                                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.secondary) },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = MaterialTheme.shapes.medium
-                                )
-                                OutlinedTextField(
-                                    value = direccionInput,
-                                    onValueChange = { direccionInput = it },
-                                    label = { Text("Dirección *") },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = MaterialTheme.shapes.medium
-                                )
-                                OutlinedTextField(
-                                    value = telefonoInput,
-                                    onValueChange = { if (it.all { c -> c.isDigit() }) telefonoInput = it },
-                                    label = { Text("Teléfono / Celular *") },
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = MaterialTheme.shapes.medium
-                                )
-                                Text("Sexo", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    FilterChip(
-                                        selected = sexoInput == "Masculino",
-                                        onClick = { sexoInput = "Masculino" },
-                                        label = { Text("Masculino") }
-                                    )
-                                    FilterChip(
-                                        selected = sexoInput == "Femenino",
-                                        onClick = { sexoInput = "Femenino" },
-                                        label = { Text("Femenino") }
-                                    )
-                                }
-                                Button(
-                                    onClick = {
-                                        viewModel.registrarCliente(
-                                            dni = state.dniBuscado,
-                                            nombre = nombreInput,
-                                            direccion = direccionInput,
-                                            sexo = sexoInput,
-                                            telefono = telefonoInput
-                                        )
-                                    },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = MaterialTheme.shapes.medium,
-                                    elevation = ButtonDefaults.buttonElevation(0.dp)
-                                ) {
-                                    Text("Guardar y Registrar Cliente")
-                                }
+                            Text(text = "No existe un cliente con DNI: ${state.dniBuscado}", color = MaterialTheme.colorScheme.error)
+                            Button(onClick = { mostrarDialogoAgregar = true }) {
+                                Text("Registrar nuevo cliente con este DNI")
                             }
                         }
                     }
-                    is ClienteUiState.RegistroExitoso -> {
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = MaterialTheme.shapes.medium
+                }
+                is ClienteUiState.RegistroExitoso -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Column(
-                                modifier = Modifier.padding(24.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
-                                Text("¡Cliente registrado con éxito!", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
-
-                                // Botón secundario con transparencia/estilo suave
-                                Button(
-                                    onClick = {
-                                        viewModel.limpiarEstado()
-                                        dniQuery = ""
-                                        nombreInput = ""
-                                        direccionInput = ""
-                                        telefonoInput = ""
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                                        contentColor = MaterialTheme.colorScheme.primary
-                                    ),
-                                    elevation = ButtonDefaults.buttonElevation(0.dp),
-                                    shape = MaterialTheme.shapes.medium
-                                ) {
-                                    Text("Realizar otra consulta")
-                                }
+                            Text("¡Cliente guardado exitosamente!", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                            Button(onClick = { viewModel.limpiarEstado(); dniQuery = "" }) {
+                                Text("Realizar nueva búsqueda")
                             }
                         }
                     }
-                    else -> {}
+                }
+                else -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Ingrese un DNI para buscar o pulse + para agregar un cliente",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
         }
+
+        // ==========================================
+        // DIÁLOGO FLOTANTE: Registrar Nuevo Cliente
+        // ==========================================
+        if (mostrarDialogoAgregar) {
+            DialogoFormularioCliente(
+                titulo = "Registrar Nuevo Cliente",
+                dniInicial = if (dniQuery.length == 8) dniQuery else "",
+                onDismiss = { mostrarDialogoAgregar = false },
+                onGuardar = { dni, nombre, direccion, sexo, telefono ->
+                    viewModel.registrarCliente(
+                        dni = dni,
+                        nombre = nombre,
+                        direccion = direccion,
+                        sexo = sexo,
+                        telefono = telefono
+                    )
+                    mostrarDialogoAgregar = false
+                }
+            )
+        }
     }
+}
+
+/**
+ * Componente reutilizable para el formulario flotante de agregar cliente.
+ */
+@Composable
+fun DialogoFormularioCliente(
+    titulo: String,
+    dniInicial: String = "",
+    nombreInicial: String = "",
+    direccionInicial: String = "",
+    sexoInicial: String = "Masculino",
+    telefonoInicial: String = "",
+    onDismiss: () -> Unit,
+    onGuardar: (String, String, String, String, String) -> Unit
+) {
+    var dniInput by remember { mutableStateOf(dniInicial) }
+    var nombreInput by remember { mutableStateOf(nombreInicial) }
+    var direccionInput by remember { mutableStateOf(direccionInicial) }
+    var sexoInput by remember { mutableStateOf(sexoInicial) }
+    var telefonoInput by remember { mutableStateOf(telefonoInicial) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(titulo) },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                OutlinedTextField(
+                    value = dniInput,
+                    onValueChange = { if (it.length <= 8 && it.all { c -> c.isDigit() }) dniInput = it },
+                    label = { Text("DNI (8 dígitos)") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = nombreInput,
+                    onValueChange = { nombreInput = it },
+                    label = { Text("Nombre Completo *") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = direccionInput,
+                    onValueChange = { direccionInput = it },
+                    label = { Text("Dirección *") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = telefonoInput,
+                    onValueChange = { if (it.all { c -> c.isDigit() }) telefonoInput = it },
+                    label = { Text("Teléfono / Celular *") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Text("Sexo", style = MaterialTheme.typography.labelMedium)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = sexoInput == "Masculino",
+                        onClick = { sexoInput = "Masculino" },
+                        label = { Text("Masculino") }
+                    )
+                    FilterChip(
+                        selected = sexoInput == "Femenino",
+                        onClick = { sexoInput = "Femenino" },
+                        label = { Text("Femenino") }
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (dniInput.length == 8 && nombreInput.isNotBlank()) {
+                        onGuardar(dniInput, nombreInput, direccionInput, sexoInput, telefonoInput)
+                    }
+                },
+                enabled = dniInput.length == 8 && nombreInput.isNotBlank()
+            ) {
+                Text("Guardar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
 }

@@ -129,4 +129,48 @@ class OrdenRepositoryImpl @Inject constructor(
         const val CAMPO_NUMERO = "numero"
         const val CAMPO_ULTIMO = "ultimo"
     }
+
+    override suspend fun obtenerTodas(): Resultado<List<OrdenServicio>> {
+        return try {
+            // 1. Intentamos obtener las órdenes desde la nube (Firestore)
+            val snapshot = firestore.collection(COLECCION_ORDENES).get().await()
+
+            val listaOrdenes = snapshot.documents.mapNotNull { doc ->
+                val idLocal = doc.getString("idLocal") ?: doc.id
+                val numero = doc.getLong(CAMPO_NUMERO)
+
+                // Extraemos los datos básicos del documento de Firestore
+                val dto = doc.toObject(OrdenDto::class.java)
+                dto?.let {
+                    // Reconstruimos el modelo de dominio a partir de los datos seguros
+                    OrdenServicio(
+                        idLocal = idLocal,
+                        numero = numero,
+                        estado = try { EstadoOrden.valueOf(doc.getString("estado") ?: "PENDIENTE") } catch (e: Exception) { EstadoOrden.PENDIENTE },
+                        estadoEnvio = EstadoEnvio.PENDIENTE_ENVIO,
+                        fotos = emptyList(), // O las rutas que maneje tu DTO
+                        audio = null,
+                        fechaRegistro = doc.getLong("fechaRegistro") ?: System.currentTimeMillis(),
+                        registradoPor = doc.getString("registradoPor").orEmpty()
+                    )
+                }
+            }
+
+            // 2. Sincronizamos/Guardamos en la caché local de Room por emergencia
+            listaOrdenes.forEach { orden ->
+                ordenDao.insertar(OrdenEntity.desdeDominio(orden))
+            }
+
+            Resultado.Exito(listaOrdenes)
+        } catch (e: Exception) {
+            // 3. Falló el internet (Modo de emergencia): Leemos directamente desde Room
+            try {
+                val entidadesLocales = ordenDao.obtenerTodas()
+                val listaLocal = entidadesLocales.map { it.aDominio() }
+                Resultado.Exito(listaLocal)
+            } catch (dbError: Exception) {
+                Resultado.Error("No se pudieron cargar las órdenes ni desde la nube ni localmente.")
+            }
+        }
+    }
 }
