@@ -38,4 +38,9 @@ object Rutas {
 
     fun rutaNuevaOrden(clienteId: String, automovilId: String) =
         "nueva_orden/$clienteId/$automovilId"
+
+    // Diagnostico con IA (HU09)
+    const val DIAGNOSTICO_ORDEN = "diagnostico_ia/{ordenId}"
+
+    fun rutaDiagnosticoOrden(ordenId: String) = "diagnostico_ia/$ordenId"
 }
