@@ -8,11 +8,13 @@ import com.example.autotallerapp.data.local.dao.MarcaDao
 import com.example.autotallerapp.data.local.dao.ModeloDao
 import com.example.autotallerapp.data.local.dao.OrdenDao
 import com.example.autotallerapp.data.local.dao.ProblemaDao
+import com.example.autotallerapp.data.local.dao.TecnicoDao
 import com.example.autotallerapp.data.local.entity.ClienteEntity
 import com.example.autotallerapp.data.local.entity.MarcaEntity
 import com.example.autotallerapp.data.local.entity.ModeloEntity
 import com.example.autotallerapp.data.local.entity.OrdenEntity
 import com.example.autotallerapp.data.local.entity.ProblemaEntity
+import com.example.autotallerapp.data.local.entity.TecnicoEntity
 
 @Database(
     entities = [
@@ -20,7 +22,8 @@ import com.example.autotallerapp.data.local.entity.ProblemaEntity
         ModeloEntity::class,
         ProblemaEntity::class,
         ClienteEntity::class,
-        OrdenEntity::class
+        OrdenEntity::class,
+        TecnicoEntity::class
     ],
     version = 4,
     exportSchema = false
@@ -32,4 +35,5 @@ abstract class AutoTallerDatabase : RoomDatabase() {
     abstract fun problemaDao(): ProblemaDao
     abstract fun clienteDao(): ClienteDao
     abstract fun ordenDao(): OrdenDao
+    abstract fun tecnicoDao(): TecnicoDao
 }
