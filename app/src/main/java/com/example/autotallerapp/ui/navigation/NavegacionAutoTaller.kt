@@ -26,6 +26,7 @@ import com.example.autotallerapp.ui.screens.orden.NuevaOrdenScreen
 import com.example.autotallerapp.ui.screens.orden.NuevaOstClienteScreen
 import com.example.autotallerapp.ui.screens.orden.ListaOrdenesScreen
 import com.example.autotallerapp.ui.screens.orden.AsignarTecnicoScreen // 👈 Importación de la pantalla HU06
+import com.example.autotallerapp.ui.screens.tecnico.ListaTecnicosScreen
 
 /** Clave con la que la camara devuelve la ruta de la foto a la pantalla de la orden. */
 private const val CLAVE_FOTO_CAPTURADA = "foto_capturada"
@@ -70,6 +71,13 @@ fun NavegacionAutoTaller(navController: NavHostController = rememberNavControlle
                     // 👈 Navegamos a la pantalla de asignación de técnicos de la orden (HU06)
                     navController.navigate(Rutas.rutaAsignarTecnico(ordenId))
                 }
+            )
+        }
+
+        // Ruta para el listado general y gestión de técnicos (HU06)
+        composable(Rutas.TECNICOS) {
+            ListaTecnicosScreen(
+                onVolver = { navController.popBackStack() }
             )
         }
 
@@ -217,7 +225,6 @@ private fun NavHostController.reemplazarPor(ruta: String) {
 private fun androidx.navigation.NavGraphBuilder.modulosPendientes(nav: NavHostController) {
     val modulos = listOf(
         Rutas.AUTOMOVILES to "Automoviles",
-        // Rutas.TECNICOS to "Tecnicos", // Removido de pendientes porque ya tiene su pantalla real arriba
         Rutas.DIAGNOSTICO_IA to "Diagnostico con IA",
         Rutas.ASISTENTE_IA to "Asistente tecnico",
         Rutas.USUARIOS to "Usuarios y roles",
