@@ -24,7 +24,7 @@ class TecnicoRepositoryImpl @Inject constructor(
         return try {
             // 1. Consultar Firestore filtrando por el rol de técnico (o en la colección 'usuarios'/'tecnicos')
             val snapshot = firestore.collection(COLECCION_USUARIOS)
-                .whereIn("rol", listOf("TECNICO", "Técnico", "tecnico"))
+                .whereIn("rol", listOf("TECNICO", "Técnico", "tecnico", "TECNICO_SUPERVISOR", "Tecnico_Supervisor"))
                 .get()
                 .await()
 

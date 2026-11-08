@@ -25,6 +25,7 @@ import com.example.autotallerapp.ui.screens.orden.CapturaFotoScreen
 import com.example.autotallerapp.ui.screens.orden.NuevaOrdenScreen
 import com.example.autotallerapp.ui.screens.orden.NuevaOstClienteScreen
 import com.example.autotallerapp.ui.screens.orden.ListaOrdenesScreen
+import com.example.autotallerapp.ui.screens.orden.AsignarTecnicoScreen // 👈 Importación de la pantalla HU06
 
 /** Clave con la que la camara devuelve la ruta de la foto a la pantalla de la orden. */
 private const val CLAVE_FOTO_CAPTURADA = "foto_capturada"
@@ -66,8 +67,23 @@ fun NavegacionAutoTaller(navController: NavHostController = rememberNavControlle
             ListaOrdenesScreen(
                 volver = { navController.popBackStack() },
                 irADetalleOrden = { ordenId ->
-                    // Aquí navegaremos al detalle de la orden cuando lo creemos
-                    // navController.navigate(Rutas.rutaDetalleOrden(ordenId))
+                    // 👈 Navegamos a la pantalla de asignación de técnicos de la orden (HU06)
+                    navController.navigate(Rutas.rutaAsignarTecnico(ordenId))
+                }
+            )
+        }
+
+        // 👈 Ruta real para la Gestión y Asignación de Técnicos (HU06)
+        composable(
+            route = Rutas.ASIGNAR_TECNICO,
+            arguments = listOf(navArgument("ordenId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val ordenId = backStackEntry.arguments?.getString("ordenId").orEmpty()
+            AsignarTecnicoScreen(
+                idOrdenLocal = ordenId,
+                onVolver = { navController.popBackStack() },
+                onAsignacionExitosa = {
+                    navController.popBackStack()
                 }
             )
         }
@@ -200,9 +216,8 @@ private fun NavHostController.reemplazarPor(ruta: String) {
 
 private fun androidx.navigation.NavGraphBuilder.modulosPendientes(nav: NavHostController) {
     val modulos = listOf(
-        // Rutas.CLIENTES to "Clientes", // Movido a su pantalla real arriba
         Rutas.AUTOMOVILES to "Automoviles",
-        Rutas.TECNICOS to "Tecnicos",
+        // Rutas.TECNICOS to "Tecnicos", // Removido de pendientes porque ya tiene su pantalla real arriba
         Rutas.DIAGNOSTICO_IA to "Diagnostico con IA",
         Rutas.ASISTENTE_IA to "Asistente tecnico",
         Rutas.USUARIOS to "Usuarios y roles",

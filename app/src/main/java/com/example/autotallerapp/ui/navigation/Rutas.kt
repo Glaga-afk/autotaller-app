@@ -40,4 +40,7 @@ object Rutas {
         "nueva_orden/$clienteId/$automovilId"
 
     const val NUEVA_OST_CLIENTE = "nueva_ost_cliente"
+
+    const val ASIGNAR_TECNICO = "asignar_tecnico/{ordenId}"
+    fun rutaAsignarTecnico(ordenId: String) = "asignar_tecnico/$ordenId"
 }

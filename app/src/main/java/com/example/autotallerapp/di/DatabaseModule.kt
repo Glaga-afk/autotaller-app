@@ -9,6 +9,7 @@ import com.example.autotallerapp.data.local.dao.MarcaDao
 import com.example.autotallerapp.data.local.dao.ModeloDao
 import com.example.autotallerapp.data.local.dao.OrdenDao
 import com.example.autotallerapp.data.local.dao.ProblemaDao
+import com.example.autotallerapp.data.local.dao.TecnicoDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -51,4 +52,7 @@ object DatabaseModule {
 
     @Provides
     fun proveerOrdenDao(db: AutoTallerDatabase): OrdenDao = db.ordenDao()
+
+    @Provides
+    fun proveerTecnicoDao(db: AutoTallerDatabase): TecnicoDao = db.tecnicoDao()
 }
