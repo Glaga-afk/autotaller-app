@@ -1,6 +1,7 @@
 package com.example.autotallerapp.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.example.autotallerapp.core.Resultado
 import com.example.autotallerapp.data.local.GestorArchivosOrden
 import com.example.autotallerapp.data.local.dao.OrdenDao
@@ -26,12 +27,14 @@ import javax.inject.Singleton
 @Singleton
 class OrdenRepositoryImpl @Inject constructor(
     @ApplicationContext private val contexto: Context,
-    private val ordenDao: OrdenDao,
+    ordenDao: OrdenDao,
     private val firestore: FirebaseFirestore,
     private val auth: FirebaseAuth,
     private val almacenamiento: AlmacenamientoArchivos,
     private val gestorArchivos: GestorArchivosOrden
 ) : OrdenRepository {
+
+    private val localOrdenDao = ordenDao
 
     override suspend fun registrar(orden: OrdenServicio): Resultado<OrdenServicio> = try {
         val idLocal = UUID.randomUUID().toString()
@@ -48,31 +51,28 @@ class OrdenRepositoryImpl @Inject constructor(
             registradoPor = auth.currentUser?.uid.orEmpty()
         )
 
-        // 1. Se guarda en Room: la orden ya existe aunque no haya internet
-        ordenDao.insertar(OrdenEntity.desdeDominio(completa))
-        // 2. WorkManager la enviara en cuanto haya conexion
+        localOrdenDao.insertar(OrdenEntity.desdeDominio(completa))
         ProgramadorSincronizacion.enviarOrdenesPendientes(contexto)
 
         Resultado.Exito(completa)
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         Resultado.Error("No se pudo guardar la orden en el dispositivo")
     }
 
     override fun observar(idLocal: String): Flow<OrdenServicio?> =
-        ordenDao.observar(idLocal).map { it?.aDominio() }
+        localOrdenDao.observar(idLocal).map { it?.aDominio() }
 
     override suspend fun sincronizarPendientes(): Resultado<Int> {
-        val pendientes = ordenDao.obtenerPorEnviar()
+        val pendientes = localOrdenDao.obtenerPorEnviar()
         var enviadas = 0
         var fallidas = 0
 
-        // Cada orden se envia por separado: si una falla, las demas siguen
         for (entidad in pendientes) {
             try {
                 enviar(entidad.aDominio())
                 enviadas++
             } catch (e: Exception) {
-                ordenDao.marcarError(entidad.idLocal, e.message ?: "Error desconocido")
+                localOrdenDao.marcarError(entidad.idLocal, e.message ?: "Error desconocido")
                 fallidas++
             }
         }
@@ -85,7 +85,6 @@ class OrdenRepositoryImpl @Inject constructor(
     }
 
     private suspend fun enviar(orden: OrdenServicio) {
-        // 1. Primero los archivos: si fallan, la orden no se publica a medias
         val fotosRemotas = orden.fotos.mapIndexed { indice, ruta ->
             almacenamiento.subir(orden.idLocal, ruta, TipoArchivo.FOTO, indice + 1)
         }
@@ -96,15 +95,11 @@ class OrdenRepositoryImpl @Inject constructor(
         val referenciaOrden = firestore.collection(COLECCION_ORDENES).document(orden.idLocal)
         val referenciaContador = firestore.collection(COLECCION_CONTADORES).document(CONTADOR_OST)
 
-        // 2. Transaccion: lee el ultimo numero, lo incrementa y crea la orden en un solo paso.
-        //    Si dos celulares envian a la vez, Firestore repite una de las transacciones,
-        //    asi nunca se repite un numero.
         val numero = firestore.runTransaction { transaccion ->
             val documentoOrden = transaccion.get(referenciaOrden)
             val numeroPrevio = documentoOrden.getLong(CAMPO_NUMERO)
 
             if (numeroPrevio != null && numeroPrevio > 0) {
-                // La orden ya se habia enviado en un intento anterior: se conserva su numero
                 numeroPrevio
             } else {
                 val ultimo = transaccion.get(referenciaContador).getLong(CAMPO_ULTIMO) ?: 0L
@@ -118,8 +113,80 @@ class OrdenRepositoryImpl @Inject constructor(
             }
         }.await()
 
-        // 3. Se marca como enviada en Room; la pantalla recibe el numero por el Flow
-        ordenDao.marcarEnviada(orden.idLocal, numero)
+        localOrdenDao.marcarEnviada(orden.idLocal, numero)
+    }
+
+    override suspend fun obtenerTodas(): Resultado<List<OrdenServicio>> {
+        return try {
+            val snapshot = firestore.collection(COLECCION_ORDENES).get().await()
+            Log.d("OrdenRepoDebug", "Documentos en Firestore encontrados: ${snapshot.size()}")
+
+            val listaOrdenes = snapshot.documents.mapNotNull { doc ->
+                val idLocal = doc.getString("idLocal") ?: doc.id
+                val numero = doc.getLong("numero") ?: doc.getDouble("numero")?.toLong()
+
+                val estadoStr = doc.getString("estado") ?: "PENDIENTE"
+                val estado = try {
+                    EstadoOrden.valueOf(estadoStr)
+                } catch (_: Exception) {
+                    EstadoOrden.PENDIENTE
+                }
+
+                // 💡 Lectura robusta de fechaRegistro compatible con Timestamp de Firestore y Long
+                val fechaRegistro = try {
+                    val timestamp = doc.getTimestamp("fechaRegistro")
+                    if (timestamp != null) {
+                        timestamp.seconds * 1000
+                    } else {
+                        doc.getLong("fechaRegistro") ?: System.currentTimeMillis()
+                    }
+                } catch (_: Exception) {
+                    System.currentTimeMillis()
+                }
+
+                val registradoPor = doc.getString("registradoPor").orEmpty()
+                val clienteNombre = doc.getString("clienteNombre").orEmpty()
+                val placa = doc.getString("placa").orEmpty()
+                val marca = doc.getString("marca").orEmpty()
+                val modelo = doc.getString("modelo").orEmpty()
+                val falla = doc.getString("falla").orEmpty()
+
+                OrdenServicio(
+                    idLocal = idLocal,
+                    numero = numero,
+                    estado = estado,
+                    estadoEnvio = EstadoEnvio.PENDIENTE_ENVIO,
+                    fotos = emptyList(),
+                    audio = null,
+                    fechaRegistro = fechaRegistro,
+                    registradoPor = registradoPor,
+                    clienteNombre = clienteNombre,
+                    placa = placa,
+                    marca = marca,
+                    modelo = modelo,
+                    falla = falla
+                )
+            }
+
+            Log.d("OrdenRepoDebug", "Órdenes mapeadas con éxito: ${listaOrdenes.size}")
+
+            listaOrdenes.forEach { orden ->
+                localOrdenDao.insertar(OrdenEntity.desdeDominio(orden))
+            }
+
+            Resultado.Exito(listaOrdenes)
+        } catch (e: Exception) {
+            Log.e("OrdenRepoDebug", "EXCEPCIÓN al obtener órdenes de Firestore", e)
+            try {
+                val entidadesLocales = localOrdenDao.obtenerTodas()
+                Log.d("OrdenRepoDebug", "Órdenes leídas de Room local: ${entidadesLocales.size}")
+                val listaLocal = entidadesLocales.map { it.aDominio() }
+                Resultado.Exito(listaLocal)
+            } catch (dbError: Exception) {
+                Log.e("OrdenRepoDebug", "EXCEPCIÓN al leer Room", dbError)
+                Resultado.Error("No se pudieron cargar las órdenes ni desde la nube ni localmente.")
+            }
+        }
     }
 
     private companion object {
@@ -128,49 +195,5 @@ class OrdenRepositoryImpl @Inject constructor(
         const val CONTADOR_OST = "ordenes_servicio"
         const val CAMPO_NUMERO = "numero"
         const val CAMPO_ULTIMO = "ultimo"
-    }
-
-    override suspend fun obtenerTodas(): Resultado<List<OrdenServicio>> {
-        return try {
-            // 1. Intentamos obtener las órdenes desde la nube (Firestore)
-            val snapshot = firestore.collection(COLECCION_ORDENES).get().await()
-
-            val listaOrdenes = snapshot.documents.mapNotNull { doc ->
-                val idLocal = doc.getString("idLocal") ?: doc.id
-                val numero = doc.getLong(CAMPO_NUMERO)
-
-                // Extraemos los datos básicos del documento de Firestore
-                val dto = doc.toObject(OrdenDto::class.java)
-                dto?.let {
-                    // Reconstruimos el modelo de dominio a partir de los datos seguros
-                    OrdenServicio(
-                        idLocal = idLocal,
-                        numero = numero,
-                        estado = try { EstadoOrden.valueOf(doc.getString("estado") ?: "PENDIENTE") } catch (e: Exception) { EstadoOrden.PENDIENTE },
-                        estadoEnvio = EstadoEnvio.PENDIENTE_ENVIO,
-                        fotos = emptyList(), // O las rutas que maneje tu DTO
-                        audio = null,
-                        fechaRegistro = doc.getLong("fechaRegistro") ?: System.currentTimeMillis(),
-                        registradoPor = doc.getString("registradoPor").orEmpty()
-                    )
-                }
-            }
-
-            // 2. Sincronizamos/Guardamos en la caché local de Room por emergencia
-            listaOrdenes.forEach { orden ->
-                ordenDao.insertar(OrdenEntity.desdeDominio(orden))
-            }
-
-            Resultado.Exito(listaOrdenes)
-        } catch (e: Exception) {
-            // 3. Falló el internet (Modo de emergencia): Leemos directamente desde Room
-            try {
-                val entidadesLocales = ordenDao.obtenerTodas()
-                val listaLocal = entidadesLocales.map { it.aDominio() }
-                Resultado.Exito(listaLocal)
-            } catch (dbError: Exception) {
-                Resultado.Error("No se pudieron cargar las órdenes ni desde la nube ni localmente.")
-            }
-        }
     }
 }

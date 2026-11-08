@@ -22,7 +22,7 @@ class TecnicoRepositoryImpl @Inject constructor(
 
     override suspend fun obtenerTecnicosDisponibles(): Resultado<List<Tecnico>> {
         return try {
-            // 1. Consultar Firestore filtrando por el rol de técnico (o en la colección 'usuarios'/'tecnicos')
+            // 1. Consultar Firestore filtrando por los roles de técnico permitidos
             val snapshot = firestore.collection(COLECCION_USUARIOS)
                 .whereIn("rol", listOf("TECNICO", "Técnico", "tecnico", "TECNICO_SUPERVISOR", "Tecnico_Supervisor"))
                 .get()
@@ -49,7 +49,7 @@ class TecnicoRepositoryImpl @Inject constructor(
 
             Resultado.Exito(listaTecnicos)
         } catch (e: Exception) {
-            // 3. Respaldo de emergencia en Room si no hay conexión
+            // 3. Respaldo local en Room si no hay conexión
             try {
                 val locales = tecnicoDao.obtenerDisponiblesLocales().map { it.aDominio() }
                 Resultado.Exito(locales)
@@ -64,19 +64,23 @@ class TecnicoRepositoryImpl @Inject constructor(
         asignaciones: List<AsignacionTecnico>
     ): Resultado<Unit> {
         return try {
-            // 1. Guardar las asignaciones en la subcolección 'detalle_tecnicos' de la OST en Firestore
             val referenciaOrden = firestore.collection(COLECCION_ORDENES).document(idOrdenLocal)
-
             val lote = firestore.batch()
 
             asignaciones.forEach { asignacion ->
+                // 1. Guardar el detalle de la asignación en la subcolección de la OST
                 val refDetalle = referenciaOrden.collection(SUBCOLECCION_DETALLE_TECNICOS).document()
                 lote.set(refDetalle, asignacion)
+
+                // 2. Marcar al técnico como ocupado (disponible = false) en la colección 'usuarios'
+                val refUsuario = firestore.collection(COLECCION_USUARIOS).document(asignacion.tecnicoId)
+                lote.update(refUsuario, "disponible", false)
             }
 
-            // 2. Actualizar el estado de la OST a 'EN_REPARACION' en Firestore
+            // 3. Actualizar el estado general de la OST a 'EN_REPARACION'
             lote.update(referenciaOrden, "estado", EstadoOrden.EN_REPARACION.name)
 
+            // 4. Ejecutar todas las operaciones de forma atómica
             lote.commit().await()
 
             Resultado.Exito(Unit)

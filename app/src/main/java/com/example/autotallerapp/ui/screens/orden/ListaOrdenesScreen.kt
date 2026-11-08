@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ListAlt
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,11 +20,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun ListaOrdenesScreen(
     volver: () -> Unit,
-    irADetalleOrden: (String) -> Unit // Recibe el ID u OrdenId para mostrar detalles
+    irADetalleOrden: (String) -> Unit,
+    viewModel: ListaOrdenesViewModel = hiltViewModel()
 ) {
-    // Aquí conectarás tu ViewModel de órdenes (ej: val viewModel: OrdenViewModel = hiltViewModel())
-    // Por ahora simularemos una lista o conexión con el estado del ViewModel:
-    // val listaOrdenes by viewModel.ordenesList.collectAsState(initial = emptyList())
+    val estado by viewModel.estado.collectAsState()
 
     Scaffold(
         topBar = {
@@ -33,36 +33,31 @@ fun ListaOrdenesScreen(
                     IconButton(onClick = volver) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
+                },
+                actions = {
+                    IconButton(onClick = { viewModel.cargarOrdenes() }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Actualizar")
+                    }
                 }
             )
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                "Historial y Órdenes Activas",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-
-            // Simulación de listado (reemplazar por la lista real de Room / ViewModel)
-            val listaSimulada = listOf<Map<String, String>>() // Aquí irán tus entidades reales de Orden
-
-            if (listaSimulada.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
+            when {
+                estado.cargando && estado.ordenes.isEmpty() -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+                estado.ordenes.isEmpty() -> {
                     Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.Center
                     ) {
                         Icon(
                             Icons.Default.ListAlt,
@@ -70,30 +65,68 @@ fun ListaOrdenesScreen(
                             modifier = Modifier.size(48.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             "No hay órdenes registradas aún",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        if (estado.error != null) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                estado.error!!,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth().weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(listaSimulada) { orden ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { irADetalleOrden("id_orden_ejemplo") },
-                            shape = MaterialTheme.shapes.medium,
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text("OST #001", style = MaterialTheme.typography.titleMedium)
-                                Text("Cliente: Juan Pérez", style = MaterialTheme.typography.bodyMedium)
-                                Text("Vehículo: ABC-123", style = MaterialTheme.typography.bodySmall)
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        item {
+                            Text(
+                                "Historial y Órdenes Activas (${estado.ordenes.size})",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        items(estado.ordenes, key = { it.idLocal }) { orden ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { irADetalleOrden(orden.idLocal) },
+                                shape = MaterialTheme.shapes.medium,
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = orden.numero?.let { "OST #$it" } ?: "OST (Sin número)",
+                                            style = MaterialTheme.typography.titleMedium
+                                        )
+                                        Surface(
+                                            shape = MaterialTheme.shapes.small,
+                                            color = MaterialTheme.colorScheme.secondaryContainer
+                                        ) {
+                                            Text(
+                                                text = orden.estado.name,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text("Cliente: ${orden.clienteNombre}", style = MaterialTheme.typography.bodyMedium)
+                                    Text("Vehículo: ${orden.placa} (${orden.marca} ${orden.modelo})", style = MaterialTheme.typography.bodySmall)
+                                }
                             }
                         }
                     }
