@@ -25,8 +25,10 @@ import com.example.autotallerapp.ui.screens.orden.CapturaFotoScreen
 import com.example.autotallerapp.ui.screens.orden.NuevaOrdenScreen
 import com.example.autotallerapp.ui.screens.orden.NuevaOstClienteScreen
 import com.example.autotallerapp.ui.screens.orden.ListaOrdenesScreen
-import com.example.autotallerapp.ui.screens.orden.AsignarTecnicoScreen // 👈 Importación de la pantalla HU06
+import com.example.autotallerapp.ui.screens.orden.AsignarTecnicoScreen
 import com.example.autotallerapp.ui.screens.tecnico.ListaTecnicosScreen
+import com.example.autotallerapp.ui.screens.diagnostico.DiagnosticoIAScreen
+import com.example.autotallerapp.ui.screens.diagnostico.SeleccionOrdenScreen
 
 /** Clave con la que la camara devuelve la ruta de la foto a la pantalla de la orden. */
 private const val CLAVE_FOTO_CAPTURADA = "foto_capturada"
@@ -211,6 +213,23 @@ fun NavegacionAutoTaller(navController: NavHostController = rememberNavControlle
             )
         }
 
+        // Diagnostico con IA (HU09)
+        composable(Rutas.DIAGNOSTICO_IA) {
+            SeleccionOrdenScreen(
+                volver = { navController.popBackStack() },
+                alSeleccionarOrden = { ordenId ->
+                    navController.navigate(Rutas.rutaDiagnosticoOrden(ordenId))
+                }
+            )
+        }
+
+        composable(
+            route = Rutas.DIAGNOSTICO_ORDEN,
+            arguments = listOf(navArgument("ordenId") { type = NavType.StringType })
+        ) {
+            DiagnosticoIAScreen(volver = { navController.popBackStack() })
+        }
+
         modulosPendientes(navController)
     }
 }
@@ -224,8 +243,11 @@ private fun NavHostController.reemplazarPor(ruta: String) {
 
 private fun androidx.navigation.NavGraphBuilder.modulosPendientes(nav: NavHostController) {
     val modulos = listOf(
+        // Rutas.CLIENTES to "Clientes", // Movido a su pantalla real arriba
         Rutas.AUTOMOVILES to "Automoviles",
-        Rutas.DIAGNOSTICO_IA to "Diagnostico con IA",
+        Rutas.ORDENES to "Ordenes de servicio",
+        // Rutas.TECNICOS to "Tecnicos",
+        // Rutas.DIAGNOSTICO_IA to "Diagnostico con IA", // Movido a su pantalla real arriba
         Rutas.ASISTENTE_IA to "Asistente tecnico",
         Rutas.USUARIOS to "Usuarios y roles",
         Rutas.INDICADORES to "Indicadores",
