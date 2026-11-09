@@ -89,6 +89,34 @@ class TecnicoRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun actualizarEstadoOrdenYLiberarTecnicos(
+        idOrdenLocal: String,
+        nuevoEstado: EstadoOrden
+    ): Resultado<Unit> {
+        return try {
+            val referenciaOrden = firestore.collection(COLECCION_ORDENES).document(idOrdenLocal)
+            val lote = firestore.batch()
+
+            // 1. Consultar los técnicos que estuvieron asignados en esta orden
+            val snapshotDetalle = referenciaOrden.collection(SUBCOLECCION_DETALLE_TECNICOS).get().await()
+            val idsTecnicosAsignados = snapshotDetalle.documents.mapNotNull { it.getString("tecnicoId") }
+
+            // 2. Liberar a cada técnico cambiando su disponibilidad a true
+            idsTecnicosAsignados.forEach { tecnicoId ->
+                val refUsuario = firestore.collection(COLECCION_USUARIOS).document(tecnicoId)
+                lote.update(refUsuario, "disponible", true)
+            }
+
+            // 3. Actualizar el estado de la OST (ej. FINALIZADO o ENTREGADO)
+            lote.update(referenciaOrden, "estado", nuevoEstado.name)
+
+            lote.commit().await()
+            Resultado.Exito(Unit)
+        } catch (e: Exception) {
+            Resultado.Error("No se pudo actualizar la orden y liberar a los técnicos: ${e.message}")
+        }
+    }
+
     private companion object {
         const val COLECCION_USUARIOS = "usuarios"
         const val COLECCION_ORDENES = "ordenes"

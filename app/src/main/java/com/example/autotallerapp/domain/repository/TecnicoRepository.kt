@@ -3,6 +3,7 @@ package com.example.autotallerapp.domain.repository
 import com.example.autotallerapp.core.Resultado
 import com.example.autotallerapp.domain.model.AsignacionTecnico
 import com.example.autotallerapp.domain.model.Tecnico
+import com.example.autotallerapp.domain.model.EstadoOrden
 
 interface TecnicoRepository {
     /** Consulta en Firestore los usuarios registrados con rol "Técnico" o "TECNICO". */
@@ -13,4 +14,6 @@ interface TecnicoRepository {
         idOrdenLocal: String,
         asignaciones: List<AsignacionTecnico>
     ): Resultado<Unit>
+
+    suspend fun actualizarEstadoOrdenYLiberarTecnicos(idOrdenLocal: String, nuevoEstado: EstadoOrden): Resultado<Unit>
 }
