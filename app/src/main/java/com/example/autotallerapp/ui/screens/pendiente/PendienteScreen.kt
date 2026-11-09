@@ -34,7 +34,9 @@ fun PendienteScreen(
 ) {
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(32.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -64,7 +66,7 @@ fun PendienteScreen(
 
             Text(
                 "El administrador del taller debe asignarte un rol antes de que puedas usar la app. " +
-                    "Vuelve a iniciar sesion cuando te avise.",
+                        "Vuelve a iniciar sesion cuando te avise.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center

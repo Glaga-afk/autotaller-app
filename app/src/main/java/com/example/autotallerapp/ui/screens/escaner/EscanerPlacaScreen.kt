@@ -61,7 +61,6 @@ import androidx.compose.ui.layout.onSizeChanged
 import kotlinx.coroutines.delay
 import com.example.autotallerapp.ui.ocr.EstabilizadorPlaca
 import com.example.autotallerapp.ui.ocr.RegionGuiaPlaca
-import com.example.autotallerapp.ui.theme.VerdeExito
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -227,7 +226,8 @@ private fun MarcoGuiaPlaca(confirmada: Boolean, modifier: Modifier = Modifier) {
             .aspectRatio(RegionGuiaPlaca.RELACION_ASPECTO)
             .border(
                 width = 3.dp,
-                color = if (confirmada) VerdeExito else MaterialTheme.colorScheme.primary,
+                color = if (confirmada) MaterialTheme.colorScheme.tertiary
+                else MaterialTheme.colorScheme.primary,
                 shape = RoundedCornerShape(12.dp)
             )
     )

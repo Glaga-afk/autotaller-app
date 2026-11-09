@@ -15,6 +15,8 @@ val OutlineColor = Color(0xFFE2E8F0)        // Bordes sutiles, limpios y finos
 val VerdeExito = Color(0xFF16A34A)
 val VerdeExitoClaro = Color(0xFFDCFCE7)
 
+val VerdeConfirmado = Color(0xFF2E7D32)
+
 val NaranjaPendiente = Color(0xFFF97316)
 val NaranjaPendienteClaro = Color(0xFFFFEDD5)
 

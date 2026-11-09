@@ -25,7 +25,7 @@ import com.example.autotallerapp.data.local.entity.TecnicoEntity
         OrdenEntity::class,
         TecnicoEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(Convertidores::class)
