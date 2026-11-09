@@ -1,9 +1,16 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.google.services)
+}
+
+val propiedadesLocales = Properties().apply {
+    val archivo = rootProject.file("local.properties")
+    if (archivo.exists()) archivo.inputStream().use { load(it) }
 }
 
 android {
@@ -20,6 +27,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "GEMINI_API_KEY", "\"${propiedadesLocales.getProperty("GEMINI_API_KEY", "")}\"")
+        buildConfigField("String", "GEMINI_MODEL", "\"${propiedadesLocales.getProperty("GEMINI_MODEL", "gemini-2.5-flash")}\"")
     }
 
     buildTypes {
@@ -35,6 +45,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -93,4 +104,10 @@ dependencies {
     implementation("com.google.firebase:firebase-storage")
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("io.coil-kt:coil-compose:2.7.0")
+
+    // HU09: cliente HTTP para Gemini
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 }
