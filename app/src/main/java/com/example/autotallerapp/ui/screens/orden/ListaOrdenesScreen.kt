@@ -138,11 +138,8 @@ fun ListaOrdenesScreen(
 
                                             Spacer(modifier = Modifier.height(12.dp))
 
-                                            // Botón para finalizar orden utilizando el mismo tipo de objeto que ya maneja la orden
-                                            val esFinalizadaOEntregada = orden.estado.name.contains("FINALIZADO") ||
-                                                    orden.estado.name.contains("ENTREGADO")
-
-                                            if (!esFinalizadaOEntregada) {
+                                            // El botón solo se muestra si la orden NO está atendida
+                                            if (orden.estado != EstadoOrden.ATENDIDA) {
                                                 Row(
                                                     modifier = Modifier.fillMaxWidth(),
                                                     horizontalArrangement = Arrangement.End
@@ -162,7 +159,7 @@ fun ListaOrdenesScreen(
                                                             modifier = Modifier.size(16.dp)
                                                         )
                                                         Spacer(modifier = Modifier.width(6.dp))
-                                                        Text("Finalizar Orden")
+                                                        Text("Marcar Atendida")
                                                     }
                                                 }
                                             }
