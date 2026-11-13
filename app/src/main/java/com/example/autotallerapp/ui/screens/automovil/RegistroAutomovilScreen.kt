@@ -1,5 +1,6 @@
 package com.example.autotallerapp.ui.screens.automovil
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -8,11 +9,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -39,8 +43,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.autotallerapp.domain.model.Marca
 import com.example.autotallerapp.domain.model.Modelo
+import com.example.autotallerapp.ui.components.BarraSuperior
 import com.example.autotallerapp.ui.components.BotonPrincipal
 import com.example.autotallerapp.ui.components.CampoTexto
+import com.example.autotallerapp.ui.theme.PlayfairDisplay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,11 +79,27 @@ fun RegistroAutomovilScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
-                title = { Text("Nuevo automovil") },
-                navigationIcon = {
-                    IconButton(onClick = volver) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+            BarraSuperior(
+                titulo = "Nuevo automóvil",
+                alVolver = volver,
+                fuenteTitulo = PlayfairDisplay,
+                iconoPersonalizado = {
+                    Box(
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.DirectionsCar,
+                            contentDescription = "Registrar automóvil",
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(15.dp)
+                                .align(Alignment.TopEnd)
+                        )
                     }
                 }
             )

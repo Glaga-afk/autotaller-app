@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.People
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.autotallerapp.ui.components.BarraSuperior
+import com.example.autotallerapp.ui.theme.PlayfairDisplay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,20 +44,11 @@ fun ClienteScreen(
     // Aquí nos adaptamos al flujo original de tu uiState
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Gestión de Clientes") },
-                navigationIcon = {
-                    IconButton(onClick = onVolver) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver atrás"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground
-                )
+            BarraSuperior(
+                titulo = "Gestión de Clientes",
+                alVolver = onVolver,
+                fuenteTitulo = PlayfairDisplay,
+                iconoPantalla = Icons.Outlined.People
             )
         },
         floatingActionButton = {

@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.ManageAccounts
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,6 +16,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.autotallerapp.domain.model.Tecnico
+import com.example.autotallerapp.ui.components.BarraSuperior
+import com.example.autotallerapp.ui.theme.PlayfairDisplay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,14 +35,11 @@ fun AsignarTecnicoScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Asignar Técnicos a la OST") },
-                navigationIcon = {
-                    IconButton(onClick = onVolver) {
-                        // Usamos la versión AutoMirrored recomendada
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                    }
-                }
+            BarraSuperior(
+                titulo = "Asignar Técnicos a la OST",
+                alVolver = onVolver,
+                fuenteTitulo = PlayfairDisplay,
+                iconoPantalla = Icons.Outlined.ManageAccounts
             )
         },
         floatingActionButton = {

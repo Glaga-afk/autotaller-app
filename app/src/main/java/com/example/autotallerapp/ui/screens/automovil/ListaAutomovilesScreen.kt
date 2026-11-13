@@ -39,6 +39,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.autotallerapp.domain.model.Automovil
+import com.example.autotallerapp.ui.components.BarraSuperior
+import com.example.autotallerapp.ui.theme.PlayfairDisplay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,18 +57,17 @@ fun ListaAutomovilesScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Automoviles") },
-                navigationIcon = {
-                    IconButton(onClick = volver) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                    }
-                }
+            BarraSuperior(
+                titulo = "Automóviles",
+                alVolver = volver,
+                fuenteTitulo = PlayfairDisplay,
+                iconoPantalla = Icons.Outlined.DirectionsCar
             )
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = irANuevoAutomovil,
+                containerColor = MaterialTheme.colorScheme.primary,
                 icon = { Icon(Icons.Filled.Add, contentDescription = null) },
                 text = { Text("Agregar automovil") }
             )

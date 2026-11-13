@@ -1,5 +1,8 @@
 package com.example.autotallerapp.ui.screens.bitacora
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -21,7 +24,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Sync
@@ -35,6 +39,7 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.StopCircle
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -50,7 +55,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -68,6 +72,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.autotallerapp.domain.model.ProblemaTecnico
 import com.example.autotallerapp.domain.model.SistemaAutomovil
+import com.example.autotallerapp.ui.components.BarraSuperior
+import com.example.autotallerapp.ui.theme.PlayfairDisplay
+import androidx.compose.material.icons.outlined.MenuBook
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,19 +95,26 @@ fun BitacoraScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
-                title = { Text("Bitacora de problemas") },
-                navigationIcon = {
-                    IconButton(onClick = volver) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = viewModel::alPulsarSincronizar, enabled = !estado.sincronizando) {
+            BarraSuperior(
+                titulo = "Bitácora de problemas",
+                alVolver = volver,
+                fuenteTitulo = PlayfairDisplay,
+                iconoPantalla = Icons.Outlined.MenuBook,
+                acciones = {
+                    IconButton(
+                        onClick = viewModel::alPulsarSincronizar,
+                        enabled = !estado.sincronizando
+                    ) {
                         if (estado.sincronizando) {
-                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
                         } else {
-                            Icon(Icons.Filled.Sync, contentDescription = "Sincronizar bitacora")
+                            Icon(
+                                Icons.Filled.Sync,
+                                contentDescription = "Sincronizar bitácora"
+                            )
                         }
                     }
                 }
@@ -242,10 +256,29 @@ private fun ContenidoBitacora(estado: BitacoraUiState, alSincronizar: () -> Unit
 
 @Composable
 private fun TarjetaProblema(problema: ProblemaTecnico) {
-    var expandido by rememberSaveable(problema.id) { androidx.compose.runtime.mutableStateOf(false) }
+    var expandido by rememberSaveable(problema.id) {
+        androidx.compose.runtime.mutableStateOf(false)
+    }
 
-    Card(onClick = { expandido = !expandido }, modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
+    Card(
+        onClick = { expandido = !expandido },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        shape = MaterialTheme.shapes.medium,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .animateContentSize(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioNoBouncy,
+                        stiffness = Spring.StiffnessMedium
+                    )
+                )
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     EtiquetaSistema(problema.sistema)
@@ -263,12 +296,27 @@ private fun TarjetaProblema(problema: ProblemaTecnico) {
 
                 Spacer(Modifier.width(12.dp))
                 IconoSistema(problema.sistema)
+
+                IconButton(onClick = { expandido = !expandido }) {
+                    Icon(
+                        imageVector = if (expandido)
+                            Icons.Filled.ExpandLess
+                        else
+                            Icons.Filled.ExpandMore,
+                        contentDescription = if (expandido)
+                            "Ocultar solución"
+                        else
+                            "Ver solución",
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
+                }
             }
 
             if (expandido) {
                 Spacer(Modifier.height(8.dp))
                 Text("Problema", style = MaterialTheme.typography.labelLarge)
                 Text(problema.descripcion, style = MaterialTheme.typography.bodyMedium)
+
                 Spacer(Modifier.height(8.dp))
                 Text(
                     "Solucion",
@@ -276,13 +324,6 @@ private fun TarjetaProblema(problema: ProblemaTecnico) {
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(problema.solucion, style = MaterialTheme.typography.bodyMedium)
-            } else {
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    "Toca para ver la solucion",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
             }
         }
     }

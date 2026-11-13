@@ -6,6 +6,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -15,6 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.autotallerapp.domain.model.Tecnico
+import com.example.autotallerapp.ui.components.BarraSuperior
+import com.example.autotallerapp.ui.theme.PlayfairDisplay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,16 +30,11 @@ fun ListaTecnicosScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Listado de Técnicos") },
-                navigationIcon = {
-                    IconButton(onClick = onVolver) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver"
-                        )
-                    }
-                }
+            BarraSuperior(
+                titulo = "Listado de Técnicos",
+                alVolver = onVolver,
+                fuenteTitulo = PlayfairDisplay,
+                iconoPantalla = Icons.Outlined.Groups,
             )
         }
     ) { paddingValues ->

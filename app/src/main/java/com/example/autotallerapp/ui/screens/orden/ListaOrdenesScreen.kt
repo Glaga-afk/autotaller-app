@@ -10,6 +10,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.autotallerapp.domain.model.EstadoOrden
+import com.example.autotallerapp.ui.components.BarraSuperior
+import com.example.autotallerapp.ui.theme.PlayfairDisplay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,16 +32,17 @@ fun ListaOrdenesScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Órdenes de Servicio Técnico") },
-                navigationIcon = {
-                    IconButton(onClick = volver) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                    }
-                },
-                actions = {
+            BarraSuperior(
+                titulo = "Órdenes de Servicio Técnico",
+                alVolver = volver,
+                fuenteTitulo = PlayfairDisplay,
+                iconoPantalla = Icons.Outlined.Description,
+                acciones = {
                     IconButton(onClick = { viewModel.cargarOrdenes() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Actualizar")
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Actualizar"
+                        )
                     }
                 }
             )

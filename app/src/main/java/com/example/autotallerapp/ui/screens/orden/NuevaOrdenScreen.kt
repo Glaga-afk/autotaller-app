@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.outlined.AddAPhoto
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Mic
@@ -79,7 +80,9 @@ import com.example.autotallerapp.data.device.ProveedorUbicacion
 import com.example.autotallerapp.domain.model.EstadoEnvio
 import com.example.autotallerapp.domain.model.OrdenServicio
 import com.example.autotallerapp.domain.usecase.RegistrarOrdenUseCase
+import com.example.autotallerapp.ui.components.BarraSuperior
 import com.example.autotallerapp.ui.components.BotonPrincipal
+import com.example.autotallerapp.ui.theme.PlayfairDisplay
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -141,13 +144,11 @@ fun NuevaOrdenScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
-                title = { Text("Nueva orden de servicio") },
-                navigationIcon = {
-                    IconButton(onClick = volver) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                    }
-                }
+            BarraSuperior(
+                titulo = "Nueva orden de servicio",
+                alVolver = volver,
+                fuenteTitulo = PlayfairDisplay,
+                iconoPantalla = Icons.Outlined.Description
             )
         }
     ) { relleno ->

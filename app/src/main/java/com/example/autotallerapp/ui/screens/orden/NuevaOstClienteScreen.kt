@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.NoteAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,6 +19,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.autotallerapp.ui.cliente.ClienteViewModel
 import com.example.autotallerapp.ui.cliente.ClienteUiState
 import com.example.autotallerapp.ui.cliente.DialogoFormularioCliente
+import com.example.autotallerapp.ui.components.BarraSuperior
+import com.example.autotallerapp.ui.theme.PlayfairDisplay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,13 +35,11 @@ fun NuevaOstClienteScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Nueva OST") },
-                navigationIcon = {
-                    IconButton(onClick = onVolver) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                    }
-                }
+            BarraSuperior(
+                titulo = "Nueva OST",
+                alVolver = onVolver,
+                fuenteTitulo = PlayfairDisplay,
+                iconoPantalla = Icons.Outlined.NoteAdd
             )
         }
     ) { padding ->

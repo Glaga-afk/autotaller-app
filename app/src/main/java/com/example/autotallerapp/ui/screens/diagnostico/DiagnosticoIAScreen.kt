@@ -60,8 +60,10 @@ import com.example.autotallerapp.domain.model.OrdenServicio
 import com.example.autotallerapp.domain.model.ProblemaTecnico
 import com.example.autotallerapp.domain.model.SistemaAutomovil
 import com.example.autotallerapp.domain.model.Urgencia
+import com.example.autotallerapp.ui.components.BarraSuperior
 import com.example.autotallerapp.ui.components.BotonPrincipal
 import com.example.autotallerapp.ui.components.BotonSecundario
+import com.example.autotallerapp.ui.theme.PlayfairDisplay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -94,15 +96,13 @@ fun DiagnosticoIAScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
-                title = { Text("Diagnostico con IA") },
-                navigationIcon = {
-                    IconButton(onClick = volver) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                    }
-                }
+            BarraSuperior(
+                titulo = "Diagnóstico con IA",
+                alVolver = volver,
+                fuenteTitulo = PlayfairDisplay,
+                iconoPantalla = Icons.Outlined.AutoAwesome
             )
-        }
+        },
     ) { relleno ->
         when {
             estado.cargandoOrden -> Box(
