@@ -21,6 +21,7 @@ import com.example.autotallerapp.ui.screens.escaner.EscanerPlacaScreen
 import com.example.autotallerapp.ui.screens.automovil.ListaAutomovilesScreen
 import com.example.autotallerapp.ui.screens.bitacora.BitacoraScreen
 import com.example.autotallerapp.ui.cliente.ClienteScreen
+import com.example.autotallerapp.ui.screens.asistente.AsistenteIaScreen
 import com.example.autotallerapp.ui.screens.orden.CapturaFotoScreen
 import com.example.autotallerapp.ui.screens.orden.NuevaOrdenScreen
 import com.example.autotallerapp.ui.screens.orden.NuevaOstClienteScreen
@@ -230,6 +231,11 @@ fun NavegacionAutoTaller(navController: NavHostController = rememberNavControlle
             DiagnosticoIAScreen(volver = { navController.popBackStack() })
         }
 
+        // Asistente técnico con IA por voz (HU12)
+        composable(Rutas.ASISTENTE_IA) {
+            AsistenteIaScreen(volver = { navController.popBackStack() })
+        }
+
         modulosPendientes(navController)
     }
 }
@@ -248,7 +254,7 @@ private fun androidx.navigation.NavGraphBuilder.modulosPendientes(nav: NavHostCo
         Rutas.ORDENES to "Ordenes de servicio",
         // Rutas.TECNICOS to "Tecnicos",
         // Rutas.DIAGNOSTICO_IA to "Diagnostico con IA", // Movido a su pantalla real arriba
-        Rutas.ASISTENTE_IA to "Asistente tecnico",
+        // Rutas.ASISTENTE_IA to "Asistente tecnico",
         Rutas.USUARIOS to "Usuarios y roles",
         Rutas.INDICADORES to "Indicadores",
         Rutas.CATALOGOS to "Catalogos",
