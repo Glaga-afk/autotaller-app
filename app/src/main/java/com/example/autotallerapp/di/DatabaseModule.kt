@@ -6,6 +6,7 @@ import com.example.autotallerapp.data.local.AutoTallerDatabase
 import com.example.autotallerapp.data.local.CatalogoSeed
 import com.example.autotallerapp.data.local.dao.ClienteDao
 import com.example.autotallerapp.data.local.dao.MarcaDao
+import com.example.autotallerapp.data.local.dao.MensajeChatDao
 import com.example.autotallerapp.data.local.dao.ModeloDao
 import com.example.autotallerapp.data.local.dao.OrdenDao
 import com.example.autotallerapp.data.local.dao.ProblemaDao
@@ -55,4 +56,7 @@ object DatabaseModule {
 
     @Provides
     fun proveerTecnicoDao(db: AutoTallerDatabase): TecnicoDao = db.tecnicoDao()
+
+    @Provides
+    fun proveerMensajeChatDao(db: AutoTallerDatabase): MensajeChatDao = db.mensajeChatDao()
 }

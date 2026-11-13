@@ -9,12 +9,14 @@ import com.example.autotallerapp.data.local.dao.ModeloDao
 import com.example.autotallerapp.data.local.dao.OrdenDao
 import com.example.autotallerapp.data.local.dao.ProblemaDao
 import com.example.autotallerapp.data.local.dao.TecnicoDao
+import com.example.autotallerapp.data.local.dao.MensajeChatDao
 import com.example.autotallerapp.data.local.entity.ClienteEntity
 import com.example.autotallerapp.data.local.entity.MarcaEntity
 import com.example.autotallerapp.data.local.entity.ModeloEntity
 import com.example.autotallerapp.data.local.entity.OrdenEntity
 import com.example.autotallerapp.data.local.entity.ProblemaEntity
 import com.example.autotallerapp.data.local.entity.TecnicoEntity
+import com.example.autotallerapp.data.local.entity.MensajeChatEntity
 
 @Database(
     entities = [
@@ -23,9 +25,10 @@ import com.example.autotallerapp.data.local.entity.TecnicoEntity
         ProblemaEntity::class,
         ClienteEntity::class,
         OrdenEntity::class,
-        TecnicoEntity::class
+        TecnicoEntity::class,
+        MensajeChatEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Convertidores::class)
@@ -36,4 +39,5 @@ abstract class AutoTallerDatabase : RoomDatabase() {
     abstract fun clienteDao(): ClienteDao
     abstract fun ordenDao(): OrdenDao
     abstract fun tecnicoDao(): TecnicoDao
+    abstract fun mensajeChatDao(): MensajeChatDao
 }
