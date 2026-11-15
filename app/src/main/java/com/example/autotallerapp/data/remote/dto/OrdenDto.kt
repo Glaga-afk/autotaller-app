@@ -1,7 +1,9 @@
 package com.example.autotallerapp.data.remote.dto
 
+import com.example.autotallerapp.domain.model.EstadoEnvio
 import com.example.autotallerapp.domain.model.EstadoOrden
 import com.example.autotallerapp.domain.model.OrdenServicio
+import com.example.autotallerapp.domain.model.Ubicacion
 import com.google.firebase.Timestamp
 import java.util.Date
 
@@ -31,6 +33,27 @@ data class OrdenDto(
     val registradoPor: String = "",
     val sincronizadoEn: Timestamp = Timestamp.now()
 ) {
+    /**
+     * HU08: convierte el documento de Firestore en el modelo de dominio.
+     * Las fotos y el audio no se copian porque en el dominio son rutas del celular.
+     */
+    fun aDominio(idDocumento: String = id): OrdenServicio = OrdenServicio(
+        idLocal = id.ifBlank { idDocumento },
+        numero = numero.takeIf { it > 0 },
+        estado = EstadoOrden.desde(estado),
+        estadoEnvio = EstadoEnvio.ENVIADA,
+        clienteDni = clienteDni,
+        clienteNombre = clienteNombre,
+        automovilId = automovilId,
+        placa = placa,
+        marca = marca,
+        modelo = modelo,
+        falla = falla,
+        ubicacion = if (latitud != null && longitud != null) Ubicacion(latitud, longitud) else null,
+        fechaRegistro = fechaRegistro.toDate().time,
+        registradoPor = registradoPor
+    )
+
     companion object {
         fun desdeDominio(
             orden: OrdenServicio,
