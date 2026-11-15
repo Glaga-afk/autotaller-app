@@ -1,6 +1,7 @@
 package com.example.autotallerapp.domain
 
 import com.example.autotallerapp.core.Resultado
+import com.example.autotallerapp.domain.model.CanalAviso
 import com.example.autotallerapp.domain.model.EstadoOrden
 import com.example.autotallerapp.domain.model.FiltroBitacora
 import com.example.autotallerapp.domain.model.InformeTecnico
@@ -39,6 +40,7 @@ class CerrarOrdenUseCaseTest {
         override suspend fun obtenerPorEstado(estado: EstadoOrden) = Resultado.Exito(emptyList<OrdenServicio>())
         override suspend fun obtenerPorId(idOrden: String) = Resultado.Exito(OrdenServicio(idLocal = idOrden))
         override suspend fun obtenerTrabajosAsignados(idOrden: String) = Resultado.Exito(emptyList<TrabajoTecnico>())
+        override suspend fun registrarAvisoCliente(idOrden: String, canal: CanalAviso) = Resultado.Exito(Unit)
     }
 
     private class BitacoraRepositoryFalsa(private val existentes: List<ProblemaTecnico>) : BitacoraRepository {

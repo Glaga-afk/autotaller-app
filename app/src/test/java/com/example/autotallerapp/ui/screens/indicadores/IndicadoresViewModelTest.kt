@@ -5,6 +5,7 @@ import com.example.autotallerapp.domain.model.EstadoOrden
 import com.example.autotallerapp.domain.model.InformeTecnico
 import com.example.autotallerapp.domain.model.ProblemaTecnico
 import com.example.autotallerapp.domain.model.TrabajoTecnico
+import com.example.autotallerapp.domain.model.CanalAviso
 import com.example.autotallerapp.domain.model.OrdenServicio
 import com.example.autotallerapp.domain.repository.OrdenRepository
 import kotlinx.coroutines.Dispatchers
@@ -29,6 +30,7 @@ class FakeOrdenRepository(private val resultado: Resultado<List<OrdenServicio>>)
     override suspend fun obtenerPorId(idOrden: String): Resultado<OrdenServicio> = Resultado.Error("No usado")
     override suspend fun obtenerTrabajosAsignados(idOrden: String): Resultado<List<TrabajoTecnico>> = Resultado.Exito(emptyList())
     override suspend fun cerrarConInforme(informe: InformeTecnico): Resultado<ProblemaTecnico?> = Resultado.Exito(null)
+    override suspend fun registrarAvisoCliente(idOrden: String, canal: CanalAviso): Resultado<Unit> = Resultado.Exito(Unit)
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)

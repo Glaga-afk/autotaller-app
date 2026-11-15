@@ -4,12 +4,17 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.autotallerapp.core.Resultado
+import com.example.autotallerapp.domain.model.CanalAviso
 import com.example.autotallerapp.domain.model.InformeTecnico
+import com.example.autotallerapp.domain.model.MensajeAvisoCliente
+import com.example.autotallerapp.domain.model.OrdenServicio
 import com.example.autotallerapp.domain.model.ProblemaTecnico
 import com.example.autotallerapp.domain.model.SistemaAutomovil
+import com.example.autotallerapp.domain.usecase.BuscarClientePorDniUseCase
 import com.example.autotallerapp.domain.usecase.BuscarProblemasSimilaresUseCase
 import com.example.autotallerapp.domain.usecase.CerrarOrdenUseCase
 import com.example.autotallerapp.domain.usecase.ObtenerDetalleCierreUseCase
+import com.example.autotallerapp.domain.usecase.RegistrarAvisoClienteUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -26,7 +31,9 @@ class InformeTecnicoViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val obtenerDetalleCierre: ObtenerDetalleCierreUseCase,
     private val buscarSimilares: BuscarProblemasSimilaresUseCase,
-    private val cerrarOrden: CerrarOrdenUseCase
+    private val cerrarOrden: CerrarOrdenUseCase,
+    private val buscarClientePorDni: BuscarClientePorDniUseCase,
+    private val registrarAvisoCliente: RegistrarAvisoClienteUseCase
 ) : ViewModel() {
 
     /** Viene del argumento {ordenId} de la ruta de navegacion. */
@@ -127,8 +134,11 @@ class InformeTecnicoViewModel @Inject constructor(
         viewModelScope.launch {
             _estado.update { it.copy(confirmandoCierre = false, guardando = true) }
             when (val resultado = cerrarOrden(informe)) {
-                is Resultado.Exito -> _estado.update {
-                    it.copy(guardando = false, cerrada = true, problemaRegistrado = resultado.dato)
+                is Resultado.Exito -> {
+                    _estado.update {
+                        it.copy(guardando = false, cerrada = true, problemaRegistrado = resultado.dato)
+                    }
+                    prepararAviso(orden, informe.solucionAplicada)
                 }
                 is Resultado.Error -> _estado.update {
                     it.copy(guardando = false, mensaje = resultado.mensaje)
@@ -138,4 +148,44 @@ class InformeTecnicoViewModel @Inject constructor(
     }
 
     fun mensajeMostrado() = _estado.update { it.copy(mensaje = null) }
+
+    // ---------- Aviso al cliente (criterio 5) ----------
+
+    /** Busca el telefono del cliente (HU02) y arma el mensaje de "vehiculo listo". */
+    private fun prepararAviso(orden: OrdenServicio, solucion: String) {
+        viewModelScope.launch {
+            _estado.update { it.copy(preparandoAviso = true) }
+            val cliente = buscarClientePorDni(orden.clienteDni).getOrNull()
+            val nombre = cliente?.nombreCompleto?.ifBlank { null } ?: orden.clienteNombre
+
+            _estado.update {
+                it.copy(
+                    preparandoAviso = false,
+                    nombreCliente = nombre,
+                    telefonoCliente = MensajeAvisoCliente.normalizarTelefono(cliente?.telefono.orEmpty()),
+                    mensajeAviso = MensajeAvisoCliente.armar(
+                        nombreCliente = nombre,
+                        marca = orden.marca,
+                        modelo = orden.modelo,
+                        placa = orden.placa,
+                        numeroOrden = orden.numeroFormateado,
+                        trabajoRealizado = solucion.trim()
+                    )
+                )
+            }
+        }
+    }
+
+    /** La pantalla ya abrio WhatsApp o SMS; aqui se deja constancia en la OST. */
+    fun alAvisarCliente(canal: CanalAviso) {
+        _estado.update { it.copy(avisoEnviadoPor = canal) }
+        viewModelScope.launch {
+            val resultado = registrarAvisoCliente(idOrden, canal)
+            if (resultado is Resultado.Error) {
+                _estado.update { it.copy(mensaje = resultado.mensaje) }
+            }
+        }
+    }
+
+    fun avisoNoDisponible(texto: String) = _estado.update { it.copy(mensaje = texto) }
 }

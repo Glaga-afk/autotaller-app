@@ -11,6 +11,7 @@ import com.example.autotallerapp.data.remote.dto.InformeDto
 import com.example.autotallerapp.data.remote.dto.OrdenDto
 import com.example.autotallerapp.data.remote.dto.ProblemaTecnicoDto
 import com.example.autotallerapp.domain.model.AsignacionTecnico
+import com.example.autotallerapp.domain.model.CanalAviso
 import com.example.autotallerapp.domain.model.EstadoEnvio
 import com.example.autotallerapp.domain.model.EstadoOrden
 import com.example.autotallerapp.domain.model.InformeTecnico
@@ -344,6 +345,21 @@ class OrdenRepositoryImpl @Inject constructor(
             Log.e("OrdenRepoDebug", "Error al cerrar la OST", e)
             Resultado.Error(mensajeDeCierre(e))
         }
+    }
+
+    override suspend fun registrarAvisoCliente(idOrden: String, canal: CanalAviso): Resultado<Unit> = try {
+        firestore.collection(COLECCION_ORDENES).document(idOrden)
+            .update(
+                mapOf(
+                    "avisoCliente.canal" to canal.name,
+                    "avisoCliente.fecha" to FieldValue.serverTimestamp(),
+                    "avisoCliente.avisadoPor" to auth.currentUser?.uid.orEmpty()
+                )
+            )
+            .await()
+        Resultado.Exito(Unit)
+    } catch (e: Exception) {
+        Resultado.Error("No se pudo registrar el aviso al cliente")
     }
 
     /** Busca en la cadena de causas el motivo real del error para mostrar un mensaje claro. */

@@ -1,6 +1,7 @@
 package com.example.autotallerapp.domain.repository
 
 import com.example.autotallerapp.core.Resultado
+import com.example.autotallerapp.domain.model.CanalAviso
 import com.example.autotallerapp.domain.model.EstadoOrden
 import com.example.autotallerapp.domain.model.InformeTecnico
 import com.example.autotallerapp.domain.model.OrdenServicio
@@ -41,4 +42,7 @@ interface OrdenRepository {
      * Devuelve el problema registrado, con su id, o null si no se registro ninguno.
      */
     suspend fun cerrarConInforme(informe: InformeTecnico): Resultado<ProblemaTecnico?>
+
+    /** Guarda en la OST que se aviso al cliente que su vehiculo esta listo. */
+    suspend fun registrarAvisoCliente(idOrden: String, canal: CanalAviso): Resultado<Unit>
 }

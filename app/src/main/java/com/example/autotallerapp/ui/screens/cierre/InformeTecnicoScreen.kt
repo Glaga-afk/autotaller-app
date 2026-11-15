@@ -17,9 +17,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Engineering
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Sms
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -31,6 +33,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -46,11 +49,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.autotallerapp.domain.model.CanalAviso
 import com.example.autotallerapp.domain.model.OrdenServicio
 import com.example.autotallerapp.domain.model.SistemaAutomovil
 import com.example.autotallerapp.domain.model.TrabajoTecnico
@@ -67,6 +72,7 @@ fun InformeTecnicoScreen(
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
+    val contexto = LocalContext.current
 
     LaunchedEffect(estado.mensaje) {
         estado.mensaje?.let {
@@ -106,7 +112,22 @@ fun InformeTecnicoScreen(
                     Button(onClick = viewModel::cargar) { Text("Reintentar") }
                 }
 
-                estado.cerrada -> PanelOrdenCerrada(estado = estado, alFinalizar = alFinalizar)
+                estado.cerrada -> PanelOrdenCerrada(
+                    estado = estado,
+                    alAvisar = { canal ->
+                        val telefono = estado.telefonoCliente ?: return@PanelOrdenCerrada
+                        val abierto = when (canal) {
+                            CanalAviso.WHATSAPP -> LanzadorAviso.abrirWhatsApp(contexto, telefono, estado.mensajeAviso)
+                            CanalAviso.SMS -> LanzadorAviso.abrirSms(contexto, telefono, estado.mensajeAviso)
+                        }
+                        if (abierto) {
+                            viewModel.alAvisarCliente(canal)
+                        } else {
+                            viewModel.avisoNoDisponible("No se encontro una app para enviar por ${canal.etiqueta}")
+                        }
+                    },
+                    alFinalizar = alFinalizar
+                )
 
                 else -> FormularioInforme(estado = estado, viewModel = viewModel)
             }
@@ -296,9 +317,13 @@ private fun SeccionProblemaNuevo(estado: InformeTecnicoUiState, viewModel: Infor
     }
 }
 
-/** Se muestra cuando la OST ya quedo en estado Atendida. */
+/** Se muestra cuando la OST ya quedo en estado Atendida. Incluye el aviso al cliente. */
 @Composable
-private fun PanelOrdenCerrada(estado: InformeTecnicoUiState, alFinalizar: () -> Unit) {
+private fun PanelOrdenCerrada(
+    estado: InformeTecnicoUiState,
+    alAvisar: (CanalAviso) -> Unit,
+    alFinalizar: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -325,8 +350,64 @@ private fun PanelOrdenCerrada(estado: InformeTecnicoUiState, alFinalizar: () -> 
                 color = MaterialTheme.colorScheme.primary
             )
         }
-        Spacer(Modifier.height(12.dp))
-        Button(onClick = alFinalizar, modifier = Modifier.fillMaxWidth()) { Text("Finalizar") }
+
+        Spacer(Modifier.height(8.dp))
+        TarjetaAvisoCliente(estado = estado, alAvisar = alAvisar)
+        Spacer(Modifier.height(8.dp))
+
+        if (estado.avisoEnviadoPor != null) {
+            Button(onClick = alFinalizar, modifier = Modifier.fillMaxWidth()) { Text("Finalizar") }
+        } else {
+            TextButton(onClick = alFinalizar) { Text("Omitir aviso y finalizar") }
+        }
+    }
+}
+
+@Composable
+private fun TarjetaAvisoCliente(estado: InformeTecnicoUiState, alAvisar: (CanalAviso) -> Unit) {
+    OutlinedCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text("Avisar al cliente", style = MaterialTheme.typography.titleMedium)
+
+            when {
+                estado.preparandoAviso -> CircularProgressIndicator(Modifier.size(24.dp))
+
+                estado.telefonoCliente == null -> Aviso(
+                    "El cliente no tiene un celular valido registrado. Avisale por otro medio."
+                )
+
+                else -> {
+                    Text(
+                        "${estado.nombreCliente} - +${estado.telefonoCliente}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Text(estado.mensajeAviso, Modifier.padding(12.dp), style = MaterialTheme.typography.bodySmall)
+                    }
+                    Button(onClick = { alAvisar(CanalAviso.WHATSAPP) }, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.AutoMirrored.Outlined.Chat, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Avisar por WhatsApp")
+                    }
+                    OutlinedButton(onClick = { alAvisar(CanalAviso.SMS) }, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Outlined.Sms, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Avisar por SMS")
+                    }
+                    estado.avisoEnviadoPor?.let {
+                        Text(
+                            "Aviso abierto en ${it.etiqueta}. Queda registrado en la OST.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

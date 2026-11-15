@@ -1,5 +1,6 @@
 package com.example.autotallerapp.ui.screens.cierre
 
+import com.example.autotallerapp.domain.model.CanalAviso
 import com.example.autotallerapp.domain.model.OrdenServicio
 import com.example.autotallerapp.domain.model.ProblemaTecnico
 import com.example.autotallerapp.domain.model.SistemaAutomovil
@@ -28,5 +29,12 @@ data class InformeTecnicoUiState(
     val guardando: Boolean = false,
     val mensaje: String? = null,
     val cerrada: Boolean = false,
-    val problemaRegistrado: Boolean = false
+    val problemaRegistrado: Boolean = false,
+
+    // Aviso al cliente por WhatsApp o SMS (criterio 5)
+    val preparandoAviso: Boolean = false,
+    val nombreCliente: String = "",
+    val telefonoCliente: String? = null,
+    val mensajeAviso: String = "",
+    val avisoEnviadoPor: CanalAviso? = null
 )
