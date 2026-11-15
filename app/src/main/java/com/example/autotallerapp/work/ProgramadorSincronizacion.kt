@@ -63,4 +63,23 @@ object ProgramadorSincronizacion {
             solicitud
         )
     }
+
+    const val TRABAJO_INDICADORES = "calcular_indicadores_periodic"
+
+    /** Programa el cálculo periódico de indicadores del taller (HU11). */
+    fun programarCalculoIndicadores(contexto: Context) {
+        val restricciones = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val solicitud = PeriodicWorkRequestBuilder<CalcularIndicadoresWorker>(4, TimeUnit.HOURS)
+            .setConstraints(restricciones)
+            .build()
+
+        WorkManager.getInstance(contexto).enqueueUniquePeriodicWork(
+            TRABAJO_INDICADORES,
+            ExistingPeriodicWorkPolicy.KEEP,
+            solicitud
+        )
+    }
 }

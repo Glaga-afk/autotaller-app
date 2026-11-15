@@ -16,4 +16,7 @@ interface OrdenRepository {
     suspend fun sincronizarPendientes(): Resultado<Int>
 
     suspend fun obtenerTodas(): Resultado<List<OrdenServicio>>
+
+    /** Obtiene las órdenes almacenadas localmente en Room (soporte offline-first). */
+    suspend fun obtenerLocales(): Resultado<List<OrdenServicio>>
 }

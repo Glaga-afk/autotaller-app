@@ -30,6 +30,7 @@ import com.example.autotallerapp.ui.screens.orden.AsignarTecnicoScreen
 import com.example.autotallerapp.ui.screens.tecnico.ListaTecnicosScreen
 import com.example.autotallerapp.ui.screens.diagnostico.DiagnosticoIAScreen
 import com.example.autotallerapp.ui.screens.diagnostico.SeleccionOrdenScreen
+import com.example.autotallerapp.ui.screens.indicadores.IndicadoresScreen
 
 /** Clave con la que la camara devuelve la ruta de la foto a la pantalla de la orden. */
 private const val CLAVE_FOTO_CAPTURADA = "foto_capturada"
@@ -236,6 +237,11 @@ fun NavegacionAutoTaller(navController: NavHostController = rememberNavControlle
             AsistenteIaScreen(volver = { navController.popBackStack() })
         }
 
+        // Dashboard de indicadores (HU11)
+        composable(Rutas.INDICADORES) {
+            IndicadoresScreen(alVolver = { navController.popBackStack() })
+        }
+
         modulosPendientes(navController)
     }
 }
@@ -256,7 +262,6 @@ private fun androidx.navigation.NavGraphBuilder.modulosPendientes(nav: NavHostCo
         // Rutas.DIAGNOSTICO_IA to "Diagnostico con IA", // Movido a su pantalla real arriba
         // Rutas.ASISTENTE_IA to "Asistente tecnico",
         Rutas.USUARIOS to "Usuarios y roles",
-        Rutas.INDICADORES to "Indicadores",
         Rutas.CATALOGOS to "Catalogos",
         Rutas.PERFIL to "Mi perfil"
     )

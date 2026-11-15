@@ -189,6 +189,15 @@ class OrdenRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun obtenerLocales(): Resultado<List<OrdenServicio>> {
+        return try {
+            val entidades = localOrdenDao.obtenerTodas()
+            Resultado.Exito(entidades.map { it.aDominio() })
+        } catch (e: Exception) {
+            Resultado.Error("Error al cargar órdenes locales: ${e.message}")
+        }
+    }
+
     private companion object {
         const val COLECCION_ORDENES = "ordenes"
         const val COLECCION_CONTADORES = "contadores"

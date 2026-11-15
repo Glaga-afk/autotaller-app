@@ -19,7 +19,10 @@ object GeminiUtilidades {
                 return bloque()
             } catch (e: Exception) {
                 if (e is CancellationException || intento >= MAX_INTENTOS || !esPasajero(e)) throw e
+
+                // 💡 Corrección del operador de multiplicación y limpieza del formato
                 delay(ESPERA_MS * intento)
+
                 intento++
             }
         }
