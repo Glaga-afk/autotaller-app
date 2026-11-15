@@ -47,4 +47,10 @@ object Rutas {
     // Diagnostico con IA (HU09)
     const val DIAGNOSTICO_ORDEN = "diagnostico_ia/{ordenId}"
     fun rutaDiagnosticoOrden(ordenId: String) = "diagnostico_ia/$ordenId"
+
+    // Informe tecnico y cierre de la OST (HU08)
+    const val ORDENES_POR_CERRAR = "ordenes_por_cerrar"
+    const val INFORME_TECNICO = "informe_tecnico/{ordenId}"
+
+    fun rutaInformeTecnico(ordenId: String) = "informe_tecnico/$ordenId"
 }

@@ -26,9 +26,13 @@ import com.example.autotallerapp.ui.theme.PlayfairDisplay
 fun ListaOrdenesScreen(
     volver: () -> Unit,
     irADetalleOrden: (String) -> Unit,
+    irACerrarOrden: (String) -> Unit,
     viewModel: ListaOrdenesViewModel = hiltViewModel()
 ) {
     val estado by viewModel.estado.collectAsState()
+
+    // HU08: al volver del informe tecnico se recarga la lista para ver la OST ya atendida
+    LaunchedEffect(Unit) { viewModel.cargarOrdenes() }
 
     Scaffold(
         topBar = {
@@ -142,19 +146,16 @@ fun ListaOrdenesScreen(
 
                                             Spacer(modifier = Modifier.height(12.dp))
 
-                                            // El botón solo se muestra si la orden NO está atendida
-                                            if (orden.estado != EstadoOrden.ATENDIDA) {
+                                            // HU08: una OST en reparacion se cierra con su informe tecnico
+                                            // (solucion, trabajo de cada tecnico y problema nuevo en la bitacora).
+                                            // El cierre tambien libera a los tecnicos, como hacia "Marcar Atendida".
+                                            if (orden.estado == EstadoOrden.EN_REPARACION) {
                                                 Row(
                                                     modifier = Modifier.fillMaxWidth(),
                                                     horizontalArrangement = Arrangement.End
                                                 ) {
                                                     OutlinedButton(
-                                                        onClick = {
-                                                            viewModel.actualizarEstadoOrden(
-                                                                idOrdenLocal = orden.idLocal,
-                                                                nuevoEstado = EstadoOrden.ATENDIDA
-                                                            )
-                                                        },
+                                                        onClick = { irACerrarOrden(orden.idLocal) },
                                                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                                                     ) {
                                                         Icon(
@@ -163,7 +164,7 @@ fun ListaOrdenesScreen(
                                                             modifier = Modifier.size(16.dp)
                                                         )
                                                         Spacer(modifier = Modifier.width(6.dp))
-                                                        Text("Marcar Atendida")
+                                                        Text("Cerrar con informe")
                                                     }
                                                 }
                                             }

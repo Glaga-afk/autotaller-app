@@ -32,6 +32,9 @@ import com.example.autotallerapp.ui.screens.diagnostico.DiagnosticoIAScreen
 import com.example.autotallerapp.ui.screens.diagnostico.SeleccionOrdenScreen
 import com.example.autotallerapp.ui.screens.indicadores.IndicadoresScreen
 
+import com.example.autotallerapp.ui.screens.cierre.InformeTecnicoScreen
+import com.example.autotallerapp.ui.screens.cierre.OrdenesPorCerrarScreen
+
 /** Clave con la que la camara devuelve la ruta de la foto a la pantalla de la orden. */
 private const val CLAVE_FOTO_CAPTURADA = "foto_capturada"
 
@@ -74,6 +77,10 @@ fun NavegacionAutoTaller(navController: NavHostController = rememberNavControlle
                 irADetalleOrden = { ordenId ->
                     // 👈 Navegamos a la pantalla de asignación de técnicos de la orden (HU06)
                     navController.navigate(Rutas.rutaAsignarTecnico(ordenId))
+                },
+                // HU08: una OST en reparacion se cierra registrando su informe tecnico
+                irACerrarOrden = { ordenId ->
+                    navController.navigate(Rutas.rutaInformeTecnico(ordenId))
                 }
             )
         }
@@ -242,6 +249,25 @@ fun NavegacionAutoTaller(navController: NavHostController = rememberNavControlle
             IndicadoresScreen(alVolver = { navController.popBackStack() })
         }
 
+        // Informe tecnico y cierre de la OST (HU08)
+        composable(Rutas.ORDENES_POR_CERRAR) {
+            OrdenesPorCerrarScreen(
+                volver = { navController.popBackStack() },
+                irAInforme = { ordenId -> navController.navigate(Rutas.rutaInformeTecnico(ordenId)) }
+            )
+        }
+
+        composable(
+            route = Rutas.INFORME_TECNICO,
+            arguments = listOf(navArgument("ordenId") { type = NavType.StringType })
+        ) {
+            // El ViewModel lee "ordenId" desde su SavedStateHandle
+            InformeTecnicoScreen(
+                volver = { navController.popBackStack() },
+                alFinalizar = { navController.popBackStack() }
+            )
+        }
+
         modulosPendientes(navController)
     }
 }
@@ -257,7 +283,7 @@ private fun androidx.navigation.NavGraphBuilder.modulosPendientes(nav: NavHostCo
     val modulos = listOf(
         // Rutas.CLIENTES to "Clientes", // Movido a su pantalla real arriba
         Rutas.AUTOMOVILES to "Automoviles",
-        Rutas.ORDENES to "Ordenes de servicio",
+        // Rutas.ORDENES to "Ordenes de servicio", // HU08: ya tiene su pantalla real (HU07); si se deja aqui, la reemplaza
         // Rutas.TECNICOS to "Tecnicos",
         // Rutas.DIAGNOSTICO_IA to "Diagnostico con IA", // Movido a su pantalla real arriba
         // Rutas.ASISTENTE_IA to "Asistente tecnico",

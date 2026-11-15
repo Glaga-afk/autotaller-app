@@ -13,6 +13,7 @@ import androidx.compose.material.icons.outlined.NoteAdd
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.PieChart
+import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.autotallerapp.domain.model.Rol
@@ -36,6 +37,7 @@ object MenuPorRol {
         )
         Rol.TECNICO_SUPERVISOR -> listOf(
             OpcionMenu("Ordenes", Icons.AutoMirrored.Outlined.ListAlt, Rutas.ORDENES),
+            OpcionMenu("Cerrar OST", Icons.Outlined.TaskAlt, Rutas.ORDENES_POR_CERRAR),
             OpcionMenu("Bitacora", Icons.Outlined.MenuBook, Rutas.BITACORA),
             OpcionMenu("Tecnicos", Icons.Outlined.Groups, Rutas.TECNICOS),
             OpcionMenu("Diagnostico IA", Icons.Outlined.AutoAwesome, Rutas.DIAGNOSTICO_IA)
