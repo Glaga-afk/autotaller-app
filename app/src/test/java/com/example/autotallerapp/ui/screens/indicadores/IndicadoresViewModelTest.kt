@@ -2,6 +2,9 @@ package com.example.autotallerapp.ui.screens.indicadores
 
 import com.example.autotallerapp.core.Resultado
 import com.example.autotallerapp.domain.model.EstadoOrden
+import com.example.autotallerapp.domain.model.InformeTecnico
+import com.example.autotallerapp.domain.model.ProblemaTecnico
+import com.example.autotallerapp.domain.model.TrabajoTecnico
 import com.example.autotallerapp.domain.model.OrdenServicio
 import com.example.autotallerapp.domain.repository.OrdenRepository
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +23,12 @@ class FakeOrdenRepository(private val resultado: Resultado<List<OrdenServicio>>)
     override suspend fun sincronizarPendientes(): Resultado<Int> = Resultado.Exito(0)
     override suspend fun obtenerTodas(): Resultado<List<OrdenServicio>> = resultado
     override suspend fun obtenerLocales(): Resultado<List<OrdenServicio>> = resultado
+
+    // HU08: metodos del cierre de la OST (no se usan en estas pruebas)
+    override suspend fun obtenerPorEstado(estado: EstadoOrden): Resultado<List<OrdenServicio>> = resultado
+    override suspend fun obtenerPorId(idOrden: String): Resultado<OrdenServicio> = Resultado.Error("No usado")
+    override suspend fun obtenerTrabajosAsignados(idOrden: String): Resultado<List<TrabajoTecnico>> = Resultado.Exito(emptyList())
+    override suspend fun cerrarConInforme(informe: InformeTecnico): Resultado<ProblemaTecnico?> = Resultado.Exito(null)
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
