@@ -10,4 +10,7 @@ interface BitacoraRepository {
     fun buscar(filtro: FiltroBitacora): Flow<List<ProblemaTecnico>>
     suspend fun sincronizar(): Resultado<Int>
     suspend fun hayDatosLocales(): Boolean
+
+    /** HU08: agrega a la copia local un problema que ya se guardo en Firestore. */
+    suspend fun guardarLocal(problema: ProblemaTecnico)
 }

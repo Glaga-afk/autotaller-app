@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import com.example.autotallerapp.core.Resultado
 import com.example.autotallerapp.data.local.dao.ProblemaDao
+import com.example.autotallerapp.data.local.entity.ProblemaEntity
 import com.example.autotallerapp.data.remote.dto.ProblemaTecnicoDto
 import com.example.autotallerapp.domain.model.FiltroBitacora
 import com.example.autotallerapp.domain.model.ProblemaTecnico
@@ -61,6 +62,23 @@ class BitacoraRepositoryImpl @Inject constructor(
     }
 
     override suspend fun hayDatosLocales(): Boolean = problemaDao.contar() > 0
+
+    override suspend fun guardarLocal(problema: ProblemaTecnico) {
+        problemaDao.insertarTodos(
+            listOf(
+                ProblemaEntity(
+                    id = problema.id,
+                    sistema = problema.sistema.name,
+                    marca = problema.marca,
+                    modelo = problema.modelo,
+                    titulo = problema.titulo,
+                    descripcion = problema.descripcion,
+                    solucion = problema.solucion,
+                    actualizadoEn = problema.actualizadoEn
+                )
+            )
+        )
+    }
 
     private companion object {
         const val COLECCION_BITACORA = "bitacora"

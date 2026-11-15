@@ -7,15 +7,24 @@ import com.example.autotallerapp.data.local.GestorArchivosOrden
 import com.example.autotallerapp.data.local.dao.OrdenDao
 import com.example.autotallerapp.data.local.entity.OrdenEntity
 import com.example.autotallerapp.data.remote.almacenamiento.AlmacenamientoArchivos
+import com.example.autotallerapp.data.remote.dto.InformeDto
 import com.example.autotallerapp.data.remote.dto.OrdenDto
+import com.example.autotallerapp.data.remote.dto.ProblemaTecnicoDto
+import com.example.autotallerapp.domain.model.AsignacionTecnico
+import com.example.autotallerapp.domain.model.CanalAviso
 import com.example.autotallerapp.domain.model.EstadoEnvio
 import com.example.autotallerapp.domain.model.EstadoOrden
+import com.example.autotallerapp.domain.model.InformeTecnico
 import com.example.autotallerapp.domain.model.OrdenServicio
+import com.example.autotallerapp.domain.model.ProblemaTecnico
 import com.example.autotallerapp.domain.model.TipoArchivo
+import com.example.autotallerapp.domain.model.TrabajoTecnico
 import com.example.autotallerapp.domain.repository.OrdenRepository
 import com.example.autotallerapp.work.ProgramadorSincronizacion
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -198,11 +207,199 @@ class OrdenRepositoryImpl @Inject constructor(
         }
     }
 
+    // ---------- HU08: informe tecnico y cierre de la OST ----------
+
+    override suspend fun obtenerPorEstado(estado: EstadoOrden): Resultado<List<OrdenServicio>> = try {
+        val documentos = firestore.collection(COLECCION_ORDENES)
+            .whereEqualTo(CAMPO_ESTADO, estado.name)
+            .get()
+            .await()
+
+        // Se ordena en el celular para no necesitar un indice compuesto en Firestore
+        val ordenes = documentos.documents
+            .mapNotNull { doc -> doc.toObject(OrdenDto::class.java)?.aDominio(doc.id) }
+            .sortedBy { it.numero ?: Long.MAX_VALUE }
+
+        Resultado.Exito(ordenes)
+    } catch (_: Exception) {
+        Resultado.Error("No se pudieron cargar las ordenes. Revisa tu conexion")
+    }
+
+    override suspend fun obtenerPorId(idOrden: String): Resultado<OrdenServicio> = try {
+        val documento = firestore.collection(COLECCION_ORDENES).document(idOrden).get().await()
+        val orden = documento.toObject(OrdenDto::class.java)?.aDominio(documento.id)
+        if (orden != null) Resultado.Exito(orden) else Resultado.Error("La orden no existe")
+    } catch (_: Exception) {
+        Resultado.Error("No se pudo cargar la orden. Revisa tu conexion")
+    }
+
+    override suspend fun obtenerTrabajosAsignados(idOrden: String): Resultado<List<TrabajoTecnico>> = try {
+        val documentos = firestore.collection(COLECCION_ORDENES).document(idOrden)
+            .collection(SUBCOLECCION_DETALLE_TECNICOS)
+            .get()
+            .await()
+
+        val trabajos = documentos.documents
+            .mapNotNull { it.toObject(AsignacionTecnico::class.java) }
+            .sortedBy { it.fechaAsignacion }
+            // Si un tecnico se asigno dos veces, vale la ultima asignacion
+            .associateBy { it.tecnicoId }
+            .values
+            .map { asignacion ->
+                TrabajoTecnico(
+                    tecnicoId = asignacion.tecnicoId,
+                    nombreTecnico = asignacion.nombreTecnico,
+                    tareaAsignada = asignacion.tareaAsignada
+                )
+            }
+
+        Resultado.Exito(trabajos)
+    } catch (_: Exception) {
+        Resultado.Error("No se pudieron cargar los tecnicos asignados")
+    }
+
+    override suspend fun cerrarConInforme(informe: InformeTecnico): Resultado<ProblemaTecnico?> {
+        val uid = auth.currentUser?.uid ?: return Resultado.Error("Tu sesion expiro. Vuelve a ingresar")
+
+        return try {
+            val referenciaOrden = firestore.collection(COLECCION_ORDENES).document(informe.idOrden)
+            val referenciaInforme = referenciaOrden
+                .collection(SUBCOLECCION_INFORME)
+                .document(DOCUMENTO_INFORME)
+
+            // Tecnicos que se liberan al cerrar la OST (igual que "Marcar Atendida" de la HU07)
+            val referenciasTecnicos = informe.trabajos
+                .map { it.tecnicoId }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .map { firestore.collection(COLECCION_USUARIOS).document(it) }
+
+            // El id del problema se genera antes para poder guardarlo dentro del informe
+            val referenciaProblema = informe.problemaNuevo?.let {
+                firestore.collection(COLECCION_BITACORA).document()
+            }
+            val problemaFinal = informe.problemaNuevo?.copy(
+                id = referenciaProblema?.id.orEmpty(),
+                solucion = informe.solucionAplicada,
+                actualizadoEn = System.currentTimeMillis()
+            )
+
+            // Transaccion: o se guarda todo (informe + bitacora + estado + tecnicos) o nada.
+            // Ademas evita que dos supervisores cierren la misma OST a la vez.
+            firestore.runTransaction { transaccion ->
+                // 1. Lecturas (en una transaccion van antes que cualquier escritura)
+                val documentoOrden = transaccion.get(referenciaOrden)
+                if (!documentoOrden.exists()) {
+                    throw CierreInvalidoException("La orden ya no existe")
+                }
+                when (EstadoOrden.desde(documentoOrden.getString(CAMPO_ESTADO))) {
+                    EstadoOrden.EN_REPARACION -> Unit
+                    EstadoOrden.ATENDIDA ->
+                        throw CierreInvalidoException("Esta OST ya fue cerrada")
+                    else ->
+                        throw CierreInvalidoException("Solo se puede cerrar una OST que esta en reparacion")
+                }
+                // Solo se liberan los tecnicos que existen en "usuarios"
+                val tecnicosExistentes = referenciasTecnicos.filter { transaccion.get(it).exists() }
+
+                // 2. Escrituras
+                transaccion.set(
+                    referenciaInforme,
+                    InformeDto.desdeDominio(informe, problemaFinal?.id, uid)
+                )
+
+                if (referenciaProblema != null && problemaFinal != null) {
+                    transaccion.set(
+                        referenciaProblema,
+                        ProblemaTecnicoDto(
+                            id = problemaFinal.id,
+                            sistema = problemaFinal.sistema.name,
+                            marca = problemaFinal.marca,
+                            modelo = problemaFinal.modelo,
+                            titulo = problemaFinal.titulo,
+                            descripcion = problemaFinal.descripcion,
+                            solucion = problemaFinal.solucion,
+                            actualizadoEn = problemaFinal.actualizadoEn
+                        )
+                    )
+                }
+
+                tecnicosExistentes.forEach { transaccion.update(it, CAMPO_DISPONIBLE, true) }
+
+                transaccion.update(
+                    referenciaOrden,
+                    mapOf(
+                        CAMPO_ESTADO to EstadoOrden.ATENDIDA.name,
+                        CAMPO_FECHA_CIERRE to FieldValue.serverTimestamp(),
+                        CAMPO_CERRADO_POR to uid
+                    )
+                )
+                true
+            }.await()
+
+            // Si la orden tambien esta en el Room de este celular, se actualiza su estado
+            localOrdenDao.actualizarEstado(informe.idOrden, EstadoOrden.ATENDIDA.name)
+
+            Resultado.Exito(problemaFinal)
+        } catch (e: Exception) {
+            Log.e("OrdenRepoDebug", "Error al cerrar la OST", e)
+            Resultado.Error(mensajeDeCierre(e))
+        }
+    }
+
+    override suspend fun registrarAvisoCliente(idOrden: String, canal: CanalAviso): Resultado<Unit> = try {
+        firestore.collection(COLECCION_ORDENES).document(idOrden)
+            .update(
+                mapOf(
+                    "avisoCliente.canal" to canal.name,
+                    "avisoCliente.fecha" to FieldValue.serverTimestamp(),
+                    "avisoCliente.avisadoPor" to auth.currentUser?.uid.orEmpty()
+                )
+            )
+            .await()
+        Resultado.Exito(Unit)
+    } catch (e: Exception) {
+        Resultado.Error("No se pudo registrar el aviso al cliente")
+    }
+
+    /** Busca en la cadena de causas el motivo real del error para mostrar un mensaje claro. */
+    private fun mensajeDeCierre(error: Throwable): String {
+        var actual: Throwable? = error
+        while (actual != null) {
+            if (actual is CierreInvalidoException) return actual.message.orEmpty()
+            if (actual is FirebaseFirestoreException) {
+                when (actual.code) {
+                    FirebaseFirestoreException.Code.PERMISSION_DENIED ->
+                        return "No tienes permiso para cerrar la OST. Revisa tu rol y las reglas de Firestore"
+                    FirebaseFirestoreException.Code.UNAVAILABLE ->
+                        return "Sin conexion: el cierre de la OST necesita internet"
+                    else -> Unit
+                }
+            }
+            actual = actual.cause
+        }
+        return "No se pudo cerrar la OST. Intentalo de nuevo"
+    }
+
     private companion object {
         const val COLECCION_ORDENES = "ordenes"
         const val COLECCION_CONTADORES = "contadores"
         const val CONTADOR_OST = "ordenes_servicio"
         const val CAMPO_NUMERO = "numero"
         const val CAMPO_ULTIMO = "ultimo"
+
+        // HU08
+        const val COLECCION_BITACORA = "bitacora"
+        const val COLECCION_USUARIOS = "usuarios"
+        const val SUBCOLECCION_DETALLE_TECNICOS = "detalle_tecnicos"
+        const val SUBCOLECCION_INFORME = "informe"
+        const val DOCUMENTO_INFORME = "final"
+        const val CAMPO_ESTADO = "estado"
+        const val CAMPO_FECHA_CIERRE = "fechaCierre"
+        const val CAMPO_CERRADO_POR = "cerradoPor"
+        const val CAMPO_DISPONIBLE = "disponible"
     }
 }
+
+/** Error de negocio lanzado dentro de la transaccion de cierre (HU08). */
+private class CierreInvalidoException(mensaje: String) : Exception(mensaje)

@@ -35,4 +35,8 @@ interface OrdenDao {
 
     @Query("SELECT * FROM ordenes") // O el nombre de la tabla de tu OrdenEntity
     suspend fun obtenerTodas(): List<OrdenEntity>
+
+    /** HU08: refleja en la copia local el cambio de estado hecho en Firestore. */
+    @Query("UPDATE ordenes SET estado = :estado WHERE idLocal = :idLocal")
+    suspend fun actualizarEstado(idLocal: String, estado: String)
 }
