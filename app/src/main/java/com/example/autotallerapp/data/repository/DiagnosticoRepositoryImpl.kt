@@ -27,6 +27,7 @@ import okhttp3.Request
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration.Companion.seconds
 
 @Singleton
 class DiagnosticoRepositoryImpl @Inject constructor(
@@ -95,7 +96,7 @@ class DiagnosticoRepositoryImpl @Inject constructor(
         )
 
         // Sin conexion, Firestore deja la tarea esperando: se corta para avisar al usuario
-        withTimeout(TIEMPO_GUARDADO_MS) {
+        withTimeout(TIEMPO_GUARDADO) {
             firestore.collection(COLECCION_ORDENES)
                 .document(diagnostico.ordenId)
                 .collection(SUBCOLECCION_DIAGNOSTICOS)
@@ -184,6 +185,6 @@ class DiagnosticoRepositoryImpl @Inject constructor(
         const val ESQUEMA_FIRESTORE = "firestore://"
         const val MIME_JPEG = "image/jpeg"
         const val LIMITE_ORDENES = 30L
-        const val TIEMPO_GUARDADO_MS = 15_000L
+        val TIEMPO_GUARDADO = 15.seconds
     }
 }
